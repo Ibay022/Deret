@@ -1,10 +1,21 @@
-// api.js - jembatan GitHub Pages -> Google Apps Script
-// Meniru google.script.run supaya kode di index.html & admin.html tidak perlu ditulis ulang.
+// api.js - jembatan GitHub Pages -> Google Apps Script (Inventory)
+// Meniru google.script.run supaya kode di index.html tidak perlu ditulis ulang.
 (function () {
-  // GANTI dengan URL Web App (berakhiran /exec) dari Deploy -> Manage deployments
   var API_URL = "https://script.google.com/macros/s/AKfycbycDqUFFLZt1QRXAm4MTnl3euHQTYxka1j9SPr2dSoexxsBRudHPn-XS79O_C_8ia2w/exec";
 
-  var token = ""; // diisi otomatis setelah loginAdmin sukses
+  var token = "";
+  try { token = localStorage.getItem("lsg_inv_token") || ""; } catch (e) {}
+  function saveToken(t) {
+    token = t;
+    try { t ? localStorage.setItem("lsg_inv_token", t) : localStorage.removeItem("lsg_inv_token"); } catch (e) {}
+  }
+
+  // Token kedaluwarsa / tidak valid -> bersihkan sesi dan kembali ke layar login
+  function sessionExpired() {
+    saveToken("");
+    try { localStorage.removeItem("petshop_user"); } catch (e) {}
+    location.reload();
+  }
 
   function runner(ok, fail) {
     return new Proxy({}, {
@@ -23,12 +34,15 @@
             .then(function (r) { return r.json(); })
             .then(function (j) {
               if (!j.ok) throw new Error(j.error || "Request gagal");
-              if (name === "loginAdmin" && j.data && j.data.token) token = j.data.token;
+              if (name === "prosesLogin" && j.data && j.data.token) saveToken(j.data.token);
               return j.data;
             })
             .then(
               function (d) { if (ok) ok(d); },
-              function (e) { if (fail) fail(e); else console.error(e); }
+              function (e) {
+                if (/Sesi habis/.test(e.message)) return sessionExpired();
+                if (fail) fail(e); else console.error(e);
+              }
             );
         };
       }
