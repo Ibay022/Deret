@@ -466,7 +466,9 @@ function handleLogin() {
       currentUser = res;
       try { localStorage.setItem('petshop_user', JSON.stringify(res)); } catch (e) {}
       tampilkanAplikasi(res);
-    } else { err.innerText = res.message; err.classList.remove('hidden'); }
+    } else { err.innerText = res.message; err.classList.remove('hidden'); }  }).withFailureHandler(e => {
+    btn.innerText = 'Masuk'; btn.disabled = false;
+    err.innerText = 'Gagal terhubung ke server: ' + e.message; err.classList.remove('hidden');
   }).prosesLogin($('username').value, $('password').value);
 }
 
