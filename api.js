@@ -1,7 +1,7 @@
 // api.js - jembatan GitHub Pages -> Google Apps Script (Inventory)
 // Meniru google.script.run supaya kode di index.html tidak perlu ditulis ulang.
 (function () {
-  var API_URL = "https://script.google.com/macros/s/AKfycbyOJnlo2e-tBR6vG2bQp_eqaDqIFRaRqgzRWfNkq7IzvuqSRQuTVsilsViMDopxmwJm/exec";
+  var API_URL = "https://script.google.com/macros/s/AKfycbwHgonrQUmmpGIKULYcOzVnUfjzhX-l63kRnTy60EmuWiTpE3ZisitDqx7refTxouk5/exec";
 
   var token = "";
   try { token = localStorage.getItem("lsg_inv_token") || ""; } catch (e) {}
