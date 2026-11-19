@@ -40,6 +40,84 @@ tbody tr:hover{background:#f8fafc}
 @media(max-width:640px){.inp{font-size:16px}.card{padding:1.1rem}}
 @media(max-width:480px){#header-date{display:none}}
 @supports(height:100dvh){#sidebar{height:100dvh}}
+  /* ===== POLISH: smooth & clean ===== */
+html{scroll-behavior:smooth}
+body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+*{-webkit-tap-highlight-color:transparent}
+
+/* transisi halus pindah menu */
+main>div:not(.hidden){animation:fadeUp .35s cubic-bezier(.22,1,.36,1)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* kartu lebih lembut */
+.card{border-radius:16px;box-shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px -16px rgba(15,23,42,.08);transition:box-shadow .25s,transform .25s,border-color .25s}
+.grid>.card:hover{box-shadow:0 2px 4px rgba(15,23,42,.05),0 16px 32px -18px rgba(37,99,235,.22);border-color:#cfe0fb;transform:translateY(-2px)}
+
+/* banner rekap: gradien + kontrol glass */
+[style*="background:var(--navy)"]{background:linear-gradient(135deg,#0b2540 0%,#12365f 55%,#1d4ed8 140%)!important;box-shadow:0 18px 40px -22px rgba(11,37,64,.6)}
+[style*="background:var(--navy)"]>div[style*="rgba(255,255,255,.18)"]{background:rgba(255,255,255,.12)!important;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.22)}
+[style*="background:var(--navy)"] input,[style*="background:var(--navy)"] select{border:0;background:#fff;transition:box-shadow .15s}
+[style*="background:var(--navy)"] input:focus,[style*="background:var(--navy)"] select:focus{box-shadow:0 0 0 3px rgba(147,197,253,.55)}
+
+/* input & tombol */
+.inp{border-radius:12px;background:#fcfdff}
+.inp:hover{border-color:#cbd5e1}
+.inp::placeholder{color:#94a3b8}
+input[type=number]{-moz-appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.btn{border-radius:12px;letter-spacing:.005em}
+.btn-o{background:linear-gradient(180deg,#3b82f6,#2563eb);box-shadow:0 6px 14px -6px rgba(37,99,235,.55)}
+.btn-o:hover{background:linear-gradient(180deg,#2f76ef,#1d4ed8);transform:translateY(-1px);box-shadow:0 10px 18px -8px rgba(37,99,235,.6)}
+.btn-o:active,.btn-soft:active,.btn-red:active{transform:scale(.97)}
+:focus-visible{outline:2px solid #93c5fd;outline-offset:2px}
+
+/* tabel */
+table{border-collapse:separate;border-spacing:0}
+th{background:#f8fafc;text-transform:uppercase;letter-spacing:.04em;font-size:.68rem;box-shadow:0 1px 0 var(--line)}
+th:first-child{border-top-left-radius:10px}th:last-child{border-top-right-radius:10px}
+td{transition:background .15s}
+tbody tr{transition:background .15s}
+tbody tr:hover td{background:#f5f9ff}
+tbody tr:last-child td{border-bottom:0}
+.pv-tbl td{font-variant-numeric:tabular-nums}
+
+/* scrollbar tipis */
+.scroll-box,.dd,.overflow-x-auto,#menu-nav{scrollbar-width:thin;scrollbar-color:#cbd5e1 transparent}
+.scroll-box::-webkit-scrollbar,.dd::-webkit-scrollbar{width:8px;height:8px}
+.scroll-box::-webkit-scrollbar-thumb,.dd::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:99px;border:2px solid #fff}
+.scroll-box::-webkit-scrollbar-thumb:hover{background:#94a3b8}
+.scroll-box{border-radius:12px}
+
+/* grafik tumbuh pelan */
+#hd-harian>div>div,#cx-harian>div>div{transform-origin:bottom;animation:growY .6s cubic-bezier(.22,1,.36,1) backwards;transition:opacity .15s}
+#hd-harian>div:hover>div,#cx-harian>div:hover>div{opacity:.75}
+@keyframes growY{from{transform:scaleY(0)}}
+#hd-terlaris .h-2>.h-2,#cx-terlaris .h-2>.h-2,#chart-kategori .h-2\.5>.h-2\.5{transform-origin:left;animation:growX .7s cubic-bezier(.22,1,.36,1) backwards}
+@keyframes growX{from{transform:scaleX(0)}}
+
+/* dropdown, modal, toast, badge */
+.dd{border-radius:14px;animation:ddIn .16s ease-out}
+@keyframes ddIn{from{opacity:0;transform:translateY(-4px)}}
+.dd-i{transition:background .12s}
+#modal-edit:not(.hidden){animation:fadeIn .2s}
+#modal-edit:not(.hidden)>.card{animation:pop .25s cubic-bezier(.22,1,.36,1)}
+@keyframes fadeIn{from{opacity:0}}
+@keyframes pop{from{opacity:0;transform:scale(.96) translateY(6px)}}
+#toast:not(.hidden){animation:toastIn .25s cubic-bezier(.22,1,.36,1)}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}}
+.badge{border-radius:999px;padding:.18rem .65rem}
+
+/* sidebar & header */
+.nav-btn{border-radius:12px}
+.nav-btn:hover{transform:translateX(2px)}
+header.sticky{background:rgba(255,255,255,.82);backdrop-filter:saturate(180%) blur(10px)}
+
+/* input hitung/display di tabel deret lebih nyaman */
+#tabel-deret .inp{padding:.55rem .4rem;font-size:1rem;border-radius:10px}
+#tabel-deret tr:focus-within td{background:#f5f9ff}
+#tabel-deret td:first-child{min-width:12rem}
+
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body class="antialiased">
