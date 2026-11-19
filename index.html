@@ -40,26 +40,19 @@ tbody tr:hover{background:#f8fafc}
 @media(max-width:640px){.inp{font-size:16px}.card{padding:1.1rem}}
 @media(max-width:480px){#header-date{display:none}}
 @supports(height:100dvh){#sidebar{height:100dvh}}
-  /* ===== POLISH: smooth & clean ===== */
+
+/* ===== POLISH: smooth & clean ===== */
 html{scroll-behavior:smooth}
 body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 *{-webkit-tap-highlight-color:transparent}
-
-/* transisi halus pindah menu */
 main>div:not(.hidden){animation:fadeUp .35s cubic-bezier(.22,1,.36,1)}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-
-/* kartu lebih lembut */
 .card{border-radius:16px;box-shadow:0 1px 2px rgba(15,23,42,.04),0 8px 24px -16px rgba(15,23,42,.08);transition:box-shadow .25s,transform .25s,border-color .25s}
 .grid>.card:hover{box-shadow:0 2px 4px rgba(15,23,42,.05),0 16px 32px -18px rgba(37,99,235,.22);border-color:#cfe0fb;transform:translateY(-2px)}
-
-/* banner rekap: gradien + kontrol glass */
 [style*="background:var(--navy)"]{background:linear-gradient(135deg,#0b2540 0%,#12365f 55%,#1d4ed8 140%)!important;box-shadow:0 18px 40px -22px rgba(11,37,64,.6)}
 [style*="background:var(--navy)"]>div[style*="rgba(255,255,255,.18)"]{background:rgba(255,255,255,.12)!important;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.22)}
 [style*="background:var(--navy)"] input,[style*="background:var(--navy)"] select{border:0;background:#fff;transition:box-shadow .15s}
 [style*="background:var(--navy)"] input:focus,[style*="background:var(--navy)"] select:focus{box-shadow:0 0 0 3px rgba(147,197,253,.55)}
-
-/* input & tombol */
 .inp{border-radius:12px;background:#fcfdff}
 .inp:hover{border-color:#cbd5e1}
 .inp::placeholder{color:#94a3b8}
@@ -70,32 +63,22 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .btn-o:hover{background:linear-gradient(180deg,#2f76ef,#1d4ed8);transform:translateY(-1px);box-shadow:0 10px 18px -8px rgba(37,99,235,.6)}
 .btn-o:active,.btn-soft:active,.btn-red:active{transform:scale(.97)}
 :focus-visible{outline:2px solid #93c5fd;outline-offset:2px}
-
-/* tabel */
 table{border-collapse:separate;border-spacing:0}
 th{background:#f8fafc;text-transform:uppercase;letter-spacing:.04em;font-size:.68rem;box-shadow:0 1px 0 var(--line)}
 th:first-child{border-top-left-radius:10px}th:last-child{border-top-right-radius:10px}
-td{transition:background .15s}
-tbody tr{transition:background .15s}
+tbody tr,td{transition:background .15s}
 tbody tr:hover td{background:#f5f9ff}
 tbody tr:last-child td{border-bottom:0}
 .pv-tbl td{font-variant-numeric:tabular-nums}
-
-/* scrollbar tipis */
 .scroll-box,.dd,.overflow-x-auto,#menu-nav{scrollbar-width:thin;scrollbar-color:#cbd5e1 transparent}
 .scroll-box::-webkit-scrollbar,.dd::-webkit-scrollbar{width:8px;height:8px}
 .scroll-box::-webkit-scrollbar-thumb,.dd::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:99px;border:2px solid #fff}
-.scroll-box::-webkit-scrollbar-thumb:hover{background:#94a3b8}
 .scroll-box{border-radius:12px}
-
-/* grafik tumbuh pelan */
 #hd-harian>div>div,#cx-harian>div>div{transform-origin:bottom;animation:growY .6s cubic-bezier(.22,1,.36,1) backwards;transition:opacity .15s}
 #hd-harian>div:hover>div,#cx-harian>div:hover>div{opacity:.75}
 @keyframes growY{from{transform:scaleY(0)}}
 #hd-terlaris .h-2>.h-2,#cx-terlaris .h-2>.h-2,#chart-kategori .h-2\.5>.h-2\.5{transform-origin:left;animation:growX .7s cubic-bezier(.22,1,.36,1) backwards}
 @keyframes growX{from{transform:scaleX(0)}}
-
-/* dropdown, modal, toast, badge */
 .dd{border-radius:14px;animation:ddIn .16s ease-out}
 @keyframes ddIn{from{opacity:0;transform:translateY(-4px)}}
 .dd-i{transition:background .12s}
@@ -106,17 +89,17 @@ tbody tr:last-child td{border-bottom:0}
 #toast:not(.hidden){animation:toastIn .25s cubic-bezier(.22,1,.36,1)}
 @keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}}
 .badge{border-radius:999px;padding:.18rem .65rem}
-
-/* sidebar & header */
 .nav-btn{border-radius:12px}
 .nav-btn:hover{transform:translateX(2px)}
 header.sticky{background:rgba(255,255,255,.82);backdrop-filter:saturate(180%) blur(10px)}
-
-/* input hitung/display di tabel deret lebih nyaman */
 #tabel-deret .inp{padding:.55rem .4rem;font-size:1rem;border-radius:10px}
 #tabel-deret tr:focus-within td{background:#f5f9ff}
 #tabel-deret td:first-child{min-width:12rem}
-
+/* baris hasil pencarian bisa diklik / dipilih */
+.dr-row,.sel-row{cursor:pointer}
+.dr-row.on td,.sel-row.sel td{background:#eaf2ff}
+.dr-row.on td:first-child,.sel-row.sel td:first-child{box-shadow:inset 3px 0 0 var(--o)}
+.dr-row:active td{background:#dbeafe}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -302,7 +285,7 @@ header.sticky{background:rgba(255,255,255,.82);backdrop-filter:saturate(180%) bl
           </div>
         </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
           <div class="card flex items-center justify-between">
             <div><p class="text-sm font-semibold" style="color:var(--mut)">Total item barang</p><h3 id="cx-total-item" class="text-2xl md:text-3xl font-extrabold mt-1">0 item</h3><p class="text-xs mt-1" style="color:var(--mut)">Barang di daftar deretmu</p></div>
             <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl" style="background:var(--tint)">🗃️</div>
@@ -359,7 +342,7 @@ header.sticky{background:rgba(255,255,255,.82);backdrop-filter:saturate(180%) bl
         </div>
         <div class="card">
           <div class="flex justify-between items-center mb-3 gap-3"><h3 id="dr-info" class="font-bold text-base">Daftar barang</h3><button onclick="simpanDeret()" class="btn btn-o">Simpan</button></div>
-          <input type="text" id="dr-filter" placeholder="🔍 Cari di daftar barang (nama / barcode)" class="inp mb-2" autocomplete="off" oninput="ambilInputDeret();renderDeret()" onkeydown="if(event.key==='Enter'){event.preventDefault();enterFilterDeret()}">
+          <input type="text" id="dr-filter" placeholder="🔍 Cari di daftar barang (nama / barcode)" class="inp mb-2" autocomplete="off" oninput="ambilInputDeret();renderDeret()" onkeydown="keyFilterDeret(event)">
           <p id="dr-note" class="text-xs mb-2" style="color:var(--mut)"></p>
           <div class="scroll-box" style="max-height:32rem">
             <table><thead><tr><th>Barang</th><th class="text-center" style="width:90px">Display</th><th class="text-center" style="width:100px">Hitung</th><th></th></tr></thead><tbody id="tabel-deret"></tbody></table>
@@ -634,7 +617,8 @@ function pilihProduk(barcode, nama, mode) {
 }
 
 // ============ STOCK DERET ============
-let deretItems = [];
+let deretItems = [], drAktif = -1;
+const drRows = () => [...document.querySelectorAll('#tabel-deret tr.dr-row')];
 const ownerDeret = () => (currentUser.role === ROLE_HEAD && $('dr-crew').value) || currentUser.username;
 const nilai = x => (x === '' || x === null || x === undefined) ? '-' : x;
 const namaBulan = p => { const [y, m] = String(p || '').split('-'); return y ? new Date(y, m - 1, 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }) : '-'; };
@@ -665,27 +649,51 @@ function renderDeret() {
   const batas = q ? 10 : 5, tampil = hasil.slice(0, batas);
   $('dr-info').innerText = `Daftar barang (${deretItems.length})`;
   $('dr-note').innerText = !deretItems.length ? '' : q
-    ? `Menampilkan ${tampil.length} dari ${hasil.length} hasil${hasil.length > batas ? ', persempit pencarian untuk melihat yang lain' : ''}`
+    ? `Menampilkan ${tampil.length} dari ${hasil.length} hasil${hasil.length > batas ? ', persempit pencarian untuk melihat yang lain' : ''}. Klik barang atau tekan Enter untuk mengisi hitungan.`
     : `Menampilkan ${tampil.length} barang terbaru dari ${deretItems.length}. Cari untuk menampilkan barang lain.`;
   const inp = (n, f, v, off) => `<input type="number" inputmode="numeric" min="0" data-n="${n}" data-f="${f}" value="${esc(v)}" placeholder="-" ${off ? 'disabled' : ''} ${f === 'jumlah' ? 'onkeydown="enterHitung(event)"' : ''} class="inp text-center font-bold" ${off ? 'style="opacity:.5"' : ''}>`;
   $('tabel-deret').innerHTML = tampil.length ? tampil.map(({ it: i, n }) => {
     const tunggu = i.status === 'Menunggu';
-    return `<tr>
-      <td onclick="fokusHitung(${n})" style="cursor:pointer"><p class="font-semibold">${esc(i.nama)}</p><p class="text-xs" style="color:var(--mut)"><span class="font-mono">${esc(i.barcode)}</span> · Awal ${nilai(i.awal)} · Min ${nilai(i.min)}</p>${tunggu ? '<span class="badge" style="background:#fef3c7;color:#92400e;margin-top:.25rem">Menunggu persetujuan Head Store</span>' : ''}</td>
+    return `<tr data-n="${n}" class="dr-row">
+      <td><p class="font-semibold">${esc(i.nama)}</p><p class="text-xs" style="color:var(--mut)"><span class="font-mono">${esc(i.barcode)}</span> · Awal ${nilai(i.awal)} · Min ${nilai(i.min)}</p>${tunggu ? '<span class="badge" style="background:#fef3c7;color:#92400e;margin-top:.25rem">Menunggu persetujuan Head Store</span>' : ''}</td>
       <td>${inp(n, 'display', i.display, tunggu)}</td>
       <td>${inp(n, 'jumlah', i.jumlah, tunggu)}</td>
       <td class="text-center"><button onclick="hapusDeretItem(${n})" class="btn btn-red" style="padding:.3rem .6rem;font-size:.75rem">Hapus</button></td>
     </tr>`;
   }).join('') : `<tr><td colspan="4" class="text-center py-6" style="color:var(--mut)">${deretItems.length ? 'Tidak ada barang yang cocok.' : 'Daftar masih kosong. Cari barang di atas lalu klik Tambah.'}</td></tr>`;
+  drAktif = q && tampil.length ? 0 : -1;   // hasil pencarian: baris pertama otomatis tersorot
+  drRows().forEach((x, i) => x.classList.toggle('on', i === drAktif));
 }
 
 // Klik barang (atau Enter setelah scan) langsung mengarahkan kursor ke kolom Hitung
 function fokusHitung(n) {
   const el = document.querySelector(`#tabel-deret input[data-n="${n}"][data-f="jumlah"]`);
   if (!el) return;
+  const rows = drRows(); drAktif = rows.findIndex(x => Number(x.dataset.n) === n);
+  rows.forEach((x, i) => x.classList.toggle('on', i === drAktif));
   if (el.disabled) return toast('Barang ini masih menunggu persetujuan Head Store');
   el.focus(); el.select();
 }
+
+function geserDeret(e) {
+  const r = drRows(); if (!r.length) return;
+  e.preventDefault();
+  drAktif = (drAktif + (e.key === 'ArrowDown' ? 1 : -1) + r.length) % r.length;
+  r.forEach((x, i) => x.classList.toggle('on', i === drAktif));
+  r[drAktif].scrollIntoView({ block: 'nearest' });
+}
+
+function keyFilterDeret(e) {
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') return geserDeret(e);
+  if (e.key === 'Enter') { e.preventDefault(); enterFilterDeret(); }
+}
+
+// klik di mana saja pada baris (kecuali input & tombol Hapus) = pilih barang
+$('tabel-deret').addEventListener('click', e => {
+  if (e.target.closest('input,button')) return;
+  const tr = e.target.closest('tr[data-n]');
+  if (tr) fokusHitung(Number(tr.dataset.n));
+});
 
 function enterFilterDeret() {
   const q = $('dr-filter').value.trim().toLowerCase();
@@ -693,6 +701,7 @@ function enterFilterDeret() {
   const cocok = deretItems.map((it, n) => ({ it, n })).filter(x => String(x.it.barcode).toLowerCase() === q || String(x.it.nama).toLowerCase().includes(q));
   const exact = cocok.find(x => String(x.it.barcode).toLowerCase() === q);
   if (exact) return fokusHitung(exact.n);
+  const rows = drRows(); if (drAktif >= 0 && rows[drAktif]) return fokusHitung(Number(rows[drAktif].dataset.n));
   if (cocok.length === 1) return fokusHitung(cocok[0].n);
   toast(cocok.length ? 'Pilih barang dari daftar yang tampil' : 'Barang tidak ada di daftar deret');
 }
@@ -908,6 +917,11 @@ function resetPageAndRenderMaster() { currentPageMaster = 1; renderMasterTable()
 function renderMasterDebounced() { clearTimeout(renderMasterDebounced.t); renderMasterDebounced.t = setTimeout(resetPageAndRenderMaster, 150); }
 function gantiHalamanMaster(d) { currentPageMaster += d; renderMasterTable(); }
 
+function pilihBaris(tr) {
+  document.querySelectorAll('#tabel-master tr.sel').forEach(x => x.classList.remove('sel'));
+  tr.classList.add('sel');
+}
+
 function renderMasterTable() {
   const q = $('filter-search').value.toLowerCase().trim(), kat = $('filter-kategori').value;
   const kepala = currentUser && currentUser.role === ROLE_HEAD;
@@ -925,7 +939,7 @@ function renderMasterTable() {
   $('tabel-master').innerHTML = masterView.length === 0
     ? `<tr><td colspan="${kepala ? 6 : 5}" class="text-center py-6" style="color:var(--mut)">Tidak ada produk yang cocok.</td></tr>`
     : masterView.map((i, n) => `
-      <tr>
+      <tr class="sel-row" onclick="pilihBaris(this)">
         <td class="font-mono text-xs" style="color:var(--mut)">${esc(i.barcode)}</td>
         <td class="font-semibold">${esc(i.nama)}</td>
         <td><span class="badge">${esc(i.kategori || '-')}</span></td>
