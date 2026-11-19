@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<base target="_top">
+<script src="api.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--o:#2563eb;--o2:#1d4ed8;--tint:#eff6ff;--line:#e2e8f0;--ink:#0f172a;--mut:#64748b;--navy:#0b2540}
+body{font-family:'Inter',sans-serif;background:#f8fafc;color:var(--ink);font-feature-settings:'tnum'}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:1.5rem;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+.inp{width:100%;padding:.7rem .9rem;background:#fff;border:1px solid var(--line);border-radius:10px;font-size:.875rem;outline:0;transition:border-color .15s,box-shadow .15s}
+.inp:focus{border-color:var(--o);box-shadow:0 0 0 3px rgba(37,99,235,.16)}
+.inp[readonly]{background:var(--tint);color:var(--o2)}
+.lbl{display:block;font-size:.78rem;font-weight:600;color:var(--mut);margin-bottom:.35rem}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;padding:.75rem 1.25rem;border-radius:10px;font-size:.875rem;font-weight:700;cursor:pointer;transition:background .15s,transform .1s}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-o{background:var(--o);color:#fff}.btn-o:hover{background:var(--o2)}
+.btn-soft{background:var(--tint);color:var(--o2)}.btn-soft:hover{background:#dbeafe}
+.btn-red{background:#fff1f0;color:#c62828}.btn-red:hover{background:#ffe0dd}
+table{width:100%;border-collapse:collapse;font-size:.875rem}
+th{position:sticky;top:0;z-index:1;background:#fff;text-align:left;padding:.7rem .75rem;font-size:.75rem;font-weight:600;color:var(--mut);border-bottom:1px solid var(--line)}
+td{padding:.75rem;border-bottom:1px solid #f1f5f9}
+tbody tr:hover{background:#f8fafc}
+.nav-btn{display:flex;align-items:center;gap:.75rem;width:100%;padding:.7rem .9rem;border-radius:10px;font-size:.875rem;font-weight:600;color:var(--mut);text-align:left;transition:background .15s,color .15s}
+.nav-btn:hover{background:var(--tint);color:var(--o2)}
+.nav-btn.on{background:var(--tint);color:var(--o2);box-shadow:inset 3px 0 0 var(--o)}
+.dd{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:30;max-height:260px;overflow-y:auto;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px -8px rgba(15,23,42,.14)}
+.dd-i{padding:.65rem .85rem;cursor:pointer;border-bottom:1px solid #f1f5f9}
+.dd-i:last-child{border:0}
+.dd-i.on,.dd-i:hover{background:var(--tint)}
+.dd mark{background:#dbeafe;color:inherit;border-radius:3px}
+.badge{display:inline-block;padding:.15rem .55rem;border-radius:7px;font-size:.72rem;font-weight:700;background:var(--tint);color:var(--o2)}
+.scroll-box{max-height:26rem;overflow:auto}
+.pv-tbl th,.pv-tbl td{white-space:nowrap}
+@media(max-width:640px){.inp{font-size:16px}.card{padding:1.1rem}}
+@media(max-width:480px){#header-date{display:none}}
+@supports(height:100dvh){#sidebar{height:100dvh}}
+</style>
+</head>
+<body class="antialiased">
+
+<!-- LOGIN -->
+<div id="view-login" class="flex items-center justify-center min-h-screen p-4" style="background:linear-gradient(160deg,#eff6ff,#f8fafc 55%,#dbeafe)">
+  <div class="card w-full max-w-sm" style="padding:2rem;box-shadow:0 24px 60px -20px rgba(15,23,42,.18)">
+    <div class="text-center mb-7">
+      <div class="flex items-center justify-center gap-3">
+        <img src="https://drive.google.com/thumbnail?id=1DcIoNThkjnb_foUzgUrk46mK9Vcl6zMW&sz=w400" alt="Logo" style="height:52px;width:auto;max-width:72px;object-fit:contain" onerror="this.replaceWith(document.createTextNode('🐶🐱'))">
+        <h2 class="text-xl font-extrabold">Laras Satwa Graha</h2>
+      </div>
+      <p class="text-sm mt-1" style="color:var(--mut)">Masuk untuk mengelola stok dan opname harian</p>
+    </div>
+    <div class="space-y-4">
+      <div><label class="lbl">Username</label><input type="text" id="username" placeholder="Masukkan username" class="inp"></div>
+      <div><label class="lbl">Password</label><input type="password" id="password" placeholder="••••••••" onkeypress="if(event.key==='Enter')handleLogin()" class="inp"></div>
+      <button onclick="handleLogin()" id="btn-login" class="btn btn-o w-full">Masuk</button>
+      <p id="login-error" class="text-xs text-center font-medium py-2 px-3 rounded-lg hidden" style="background:#fff1f0;color:#c62828"></p>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="view-app" class="hidden min-h-screen flex">
+  <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/30 z-30 hidden lg:hidden"></div>
+
+  <aside id="sidebar" class="fixed lg:sticky top-0 left-0 h-screen z-40 w-64 bg-white flex flex-col transition-transform duration-300 -translate-x-full lg:translate-x-0" style="border-right:1px solid var(--line)">
+    <div class="p-5 flex items-center justify-between" style="border-bottom:1px solid var(--line)">
+      <div class="flex items-center gap-3">
+        <img src="https://drive.google.com/thumbnail?id=1DcIoNThkjnb_foUzgUrk46mK9Vcl6zMW&sz=w400" alt="Logo" style="height:40px;width:auto;max-width:52px;object-fit:contain" onerror="this.replaceWith(document.createTextNode('🐶'))">
+        <div><h1 class="font-extrabold text-base leading-tight">Laras Satwa</h1><span class="text-xs font-semibold" style="color:var(--o)">Inventory v2.5</span></div>
+      </div>
+      <button onclick="toggleSidebar()" class="lg:hidden p-1" style="color:var(--mut)">✕</button>
+    </div>
+    <div class="px-4 pt-4">
+      <div class="rounded-xl p-3 flex items-center gap-3" style="background:var(--tint)">
+        <div id="avatar-initial" class="w-9 h-9 rounded-lg flex items-center justify-center font-bold text-sm text-white" style="background:var(--o)">U</div>
+        <div class="overflow-hidden"><p id="sidebar-username" class="text-sm font-bold truncate">Username</p><p id="sidebar-role" class="text-xs font-medium truncate" style="color:var(--o2)">Role</p></div>
+      </div>
+    </div>
+    <nav id="menu-nav" class="flex-1 px-4 py-4 space-y-1 overflow-y-auto"></nav>
+    <div class="p-4 space-y-2" style="border-top:1px solid var(--line)">
+      <button onclick="syncDatabase(true)" class="btn btn-o w-full" style="padding:.65rem">🔄 Sinkronisasi data</button>
+      <button onclick="logout()" class="btn btn-red w-full" style="padding:.6rem">Keluar</button>
+    </div>
+  </aside>
+
+  <div class="flex-1 flex flex-col min-w-0">
+    <header class="bg-white sticky top-0 z-20 px-4 md:px-8 py-4 flex items-center justify-between" style="border-bottom:1px solid var(--line)">
+      <div class="flex items-center gap-3">
+        <button onclick="toggleSidebar()" class="lg:hidden p-2 rounded-lg btn-soft">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div><h2 id="page-title" class="font-extrabold text-lg">Dashboard utama</h2><p class="text-xs hidden sm:block" style="color:var(--mut)">Manajemen stok dan operasional Laras Satwa Graha</p></div>
+      </div>
+      <span id="header-date" class="badge" style="padding:.4rem .8rem;font-size:.78rem"></span>
+    </header>
+
+    <main class="flex-1 p-4 md:p-8 max-w-6xl w-full mx-auto">
+
+      <!-- DASHBOARD -->
+      <div id="section-dashboard" class="space-y-5">
+        <div id="box-permintaan" class="card hidden">
+          <h3 class="font-bold text-base mb-3">Permintaan barang deret <span id="req-count" class="badge"></span></h3>
+          <div class="overflow-x-auto"><table><thead><tr><th>Crew</th><th>Barang</th><th></th></tr></thead><tbody id="tabel-permintaan"></tbody></table></div>
+        </div>
+        <div class="rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 text-white" style="background:var(--navy)">
+          <div><h3 class="text-lg font-extrabold">Rekap stock deret</h3><p class="text-sm opacity-90 mt-1">Pilih crew dan rentang tanggal, cek datanya di pratinjau, lalu unduh dalam format Excel (.xlsx)</p></div>
+          <div class="flex flex-wrap items-center gap-2 p-2 rounded-xl" style="background:rgba(255,255,255,.18)">
+            <select id="hd-crew" class="rounded-lg text-sm font-semibold px-2 py-1.5 outline-none" style="color:var(--ink);max-width:9rem" onchange="muatDashHead()"><option value="">Semua crew</option></select>
+            <span class="text-sm font-semibold px-1">Tgl</span>
+            <input type="number" id="exp-start" value="1" min="1" max="31" onchange="muatDashHead()" class="w-14 text-center py-1.5 rounded-lg text-sm font-bold outline-none" style="color:var(--ink)">
+            <span class="text-sm">s/d</span>
+            <input type="number" id="exp-end" value="31" min="1" max="31" onchange="muatDashHead()" class="w-14 text-center py-1.5 rounded-lg text-sm font-bold outline-none" style="color:var(--ink)">
+            <button onclick="downloadExcel()" class="btn" style="background:#fff;color:var(--o2);padding:.5rem 1rem">📥 Unduh</button>
+          </div>
+        </div>
+
+        <!-- PRATINJAU DATA STOCK DERET -->
+        <div class="card">
+          <div class="mb-3">
+            <h3 class="font-bold text-base">Pratinjau data stock deret</h3>
+            <p id="pv-info" class="text-xs mt-0.5" style="color:var(--mut)">Memuat...</p>
+          </div>
+          <div class="scroll-box" style="max-height:24rem">
+            <table class="pv-tbl"><thead id="pv-head"></thead><tbody id="pv-body"></tbody></table>
+          </div>
+          <div class="flex items-center justify-between mt-4 pt-4 text-sm" style="border-top:1px solid var(--line)">
+            <span id="pv-page" class="font-medium" style="color:var(--mut)">Halaman 1</span>
+            <div class="flex gap-2">
+              <button onclick="gantiHalamanPv('pv',-1)" id="pv-prev" class="btn btn-soft" style="padding:.5rem .9rem" disabled>← Sebelumnya</button>
+              <button onclick="gantiHalamanPv('pv',1)" id="pv-next" class="btn btn-soft" style="padding:.5rem .9rem" disabled>Selanjutnya →</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div><h3 class="text-base font-extrabold">Ringkasan stock deret</h3><p id="hd-periode" class="text-xs mt-0.5" style="color:var(--mut)"></p></div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          <div class="card"><p class="text-sm font-semibold" style="color:var(--mut)">Total item deret</p><h3 id="hd-item" class="text-2xl font-extrabold mt-1">0 item</h3></div>
+          <div class="card"><p class="text-sm font-semibold" style="color:var(--mut)">Total item terjual</p><h3 id="hd-terjual" class="text-2xl font-extrabold mt-1" style="color:var(--o2)">0 pcs</h3></div>
+          <div class="card"><p class="text-sm font-semibold" style="color:var(--mut)">Di bawah stok minimal</p><h3 id="hd-rendah" class="text-2xl font-extrabold mt-1" style="color:#c62828">0 item</h3></div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div class="card"><h3 class="font-bold text-base mb-3">Penjualan harian</h3>
+            <div id="hd-harian" class="flex items-end gap-0.5" style="height:140px"></div>
+            <div class="flex justify-between text-xs mt-1" style="color:var(--mut)"><span>Tgl 1</span><span>Tgl 31</span></div></div>
+          <div class="card"><h3 class="font-bold text-base mb-3">Barang terlaris</h3><div id="hd-terlaris" class="space-y-3"></div></div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div class="card"><h3 class="font-bold text-base mb-3">Per crew</h3>
+            <table><thead><tr><th>Crew</th><th class="text-center">Item</th><th class="text-center">Terjual</th><th class="text-center">Di bawah min</th></tr></thead><tbody id="tabel-hd-crew"></tbody></table></div>
+          <div class="card"><h3 class="font-bold text-base mb-3">Perlu isi ulang display</h3>
+            <div class="scroll-box" style="max-height:20rem"><table><thead><tr><th>Barang</th><th class="text-center">Stok</th><th class="text-center">Min</th><th class="text-center">Display</th><th class="text-center">Perlu isi</th></tr></thead><tbody id="tabel-hd-isi"></tbody></table></div></div>
+        </div>
+        <h3 class="text-base font-extrabold pt-2">Stok sistem (Master_Stok)</h3>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div class="card flex items-center justify-between">
+            <div><p class="text-sm font-semibold" style="color:var(--mut)">Total nilai stok</p><h3 id="val-total-stok" class="text-2xl md:text-3xl font-extrabold mt-1">Rp 0</h3><p class="text-xs mt-1" style="color:var(--mut)">Berdasarkan stok akhir saat ini</p></div>
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl" style="background:var(--tint)">💰</div>
+          </div>
+          <div class="card flex items-center justify-between">
+            <div><p class="text-sm font-semibold" style="color:var(--mut)">Stok di bawah minimal</p><h3 id="val-stok-min" class="text-2xl md:text-3xl font-extrabold mt-1" style="color:#c62828">0 produk</h3><p class="text-xs mt-1" style="color:var(--mut)">Perlu restock atau repack</p></div>
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl" style="background:#fff1f0">⚠️</div>
+          </div>
+          <div class="card flex items-center justify-between">
+            <div><p class="text-sm font-semibold" style="color:var(--mut)">Total produk</p><h3 id="val-total-produk" class="text-2xl md:text-3xl font-extrabold mt-1">0 produk</h3><p class="text-xs mt-1" style="color:var(--mut)">Terdaftar di master barang</p></div>
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl" style="background:var(--tint)">🏷️</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="font-bold text-base mb-3">Produk di bawah batas minimal</h3>
+          <div class="scroll-box">
+            <table>
+              <thead><tr><th>Nama produk</th><th class="text-center">Stok</th><th class="text-center">Min</th><th>Catatan mutasi</th></tr></thead>
+              <tbody id="tabel-menipis"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="font-bold text-base mb-4">Stok per kategori</h3>
+          <div id="chart-kategori" class="space-y-3"></div>
+        </div>
+
+        <div class="card flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div><h3 class="font-bold text-base">Tutup bulan stock deret</h3><p class="text-sm mt-1" style="color:var(--mut)">Arsipkan data bulan ini, isi Stok Awal dari hitungan terakhir, dan hitung Stok Minimal (terjual x 2).</p></div>
+          <button onclick="tutupBulan()" class="btn btn-soft" style="white-space:nowrap">Tutup bulan</button>
+        </div>
+      </div>
+
+      <!-- DASHBOARD CREW -->
+      <div id="section-dashcrew" class="hidden space-y-5">
+        <div class="rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 text-white" style="background:var(--navy)">
+          <div><h3 class="text-lg font-extrabold">Hasil stock deret</h3><p id="cx-periode" class="text-sm opacity-90 mt-1">Periode</p></div>
+          <div class="flex flex-wrap items-center gap-2 p-2 rounded-xl" style="background:rgba(255,255,255,.18)">
+            <span class="text-sm font-semibold px-1">Tgl</span>
+            <input type="number" id="cx-start" value="1" min="1" max="31" onchange="muatDashCrew()" class="w-14 text-center py-1.5 rounded-lg text-sm font-bold outline-none" style="color:var(--ink)">
+            <span class="text-sm">s/d</span>
+            <input type="number" id="cx-end" value="31" min="1" max="31" onchange="muatDashCrew()" class="w-14 text-center py-1.5 rounded-lg text-sm font-bold outline-none" style="color:var(--ink)">
+            <button onclick="downloadExcel('cx')" class="btn" style="background:#fff;color:var(--o2);padding:.5rem 1rem">📥 Unduh</button>
+          </div>
+        </div>
+<!-- PRATINJAU DATA STOCK DERET -->
+        <div class="card">
+          <div class="mb-3">
+            <h3 class="font-bold text-base">Pratinjau data stock deret</h3>
+            <p id="pc-info" class="text-xs mt-0.5" style="color:var(--mut)">Memuat...</p>
+          </div>
+          <div class="scroll-box" style="max-height:24rem">
+            <table class="pv-tbl"><thead id="pc-head"></thead><tbody id="pc-body"></tbody></table>
+          </div>
+          <div class="flex items-center justify-between mt-4 pt-4 text-sm" style="border-top:1px solid var(--line)">
+            <span id="pc-page" class="font-medium" style="color:var(--mut)">Halaman 1</span>
+            <div class="flex gap-2">
+              <button onclick="gantiHalamanPv('pc',-1)" id="pc-prev" class="btn btn-soft" style="padding:.5rem .9rem" disabled>← Sebelumnya</button>
+              <button onclick="gantiHalamanPv('pc',1)" id="pc-next" class="btn btn-soft" style="padding:.5rem .9rem" disabled>Selanjutnya →</button>
+            </div>
+          </div>
+        </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          <div class="card flex items-center justify-between">
+            <div><p class="text-sm font-semibold" style="color:var(--mut)">Total item barang</p><h3 id="cx-total-item" class="text-2xl md:text-3xl font-extrabold mt-1">0 item</h3><p class="text-xs mt-1" style="color:var(--mut)">Barang di daftar deretmu</p></div>
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl" style="background:var(--tint)">🗃️</div>
+          </div>
+          <div class="card flex items-center justify-between">
+            <div><p class="text-sm font-semibold" style="color:var(--mut)">Total item terjual</p><h3 id="cx-total-terjual" class="text-2xl md:text-3xl font-extrabold mt-1">0 pcs</h3><p class="text-xs mt-1" style="color:var(--mut)">Penurunan hitungan dari hari ke hari</p></div>
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl" style="background:var(--tint)">📉</div>
+          </div>
+          <div class="card flex items-center justify-between">
+            <div><p class="text-sm font-semibold" style="color:var(--mut)">Perlu isi ulang</p><h3 id="cx-rendah" class="text-2xl md:text-3xl font-extrabold mt-1" style="color:#c62828">0 item</h3><p class="text-xs mt-1" style="color:var(--mut)">Stok sudah di bawah minimal</p></div>
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl" style="background:#fff1f0">⚠️</div>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div class="card"><h3 class="font-bold text-base mb-3">Penjualan harian</h3>
+            <div id="cx-harian" class="flex items-end gap-0.5" style="height:140px"></div>
+            <div class="flex justify-between text-xs mt-1" style="color:var(--mut)"><span>Tgl 1</span><span>Tgl 31</span></div></div>
+          <div class="card"><h3 class="font-bold text-base mb-3">Barang terlaris</h3><div id="cx-terlaris" class="space-y-3"></div></div>
+        </div>
+        <div class="card">
+          <h3 class="font-bold text-base mb-3">Perlu isi ulang display</h3>
+          <div class="scroll-box" style="max-height:20rem"><table><thead><tr><th>Barang</th><th class="text-center">Stok</th><th class="text-center">Min</th><th class="text-center">Display</th><th class="text-center">Perlu isi</th></tr></thead><tbody id="tabel-cx-isi"></tbody></table></div>
+        </div>
+        <div class="card">
+          <h3 class="font-bold text-base mb-1">Rincian per barang</h3>
+          <p id="cx-rincian-note" class="text-xs mb-3" style="color:var(--mut)"></p>
+          <div class="scroll-box">
+            <table><thead><tr><th>Barang</th><th class="text-center">Awal</th><th class="text-center">Terakhir</th><th class="text-center">Terjual</th><th class="text-center">Min</th><th class="text-center">Display</th></tr></thead><tbody id="tabel-cx"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- STOCK DERET -->
+      <div id="section-deret" class="hidden space-y-5">
+        <div class="card">
+          <div class="flex flex-col md:flex-row md:items-end gap-4 justify-between">
+            <div><h2 class="text-lg font-extrabold">Stock deret</h2><p class="text-sm mt-1" style="color:var(--mut)">Tambah barang deretmu, isi stok display, lalu hitungan per hari</p></div>
+            <div class="flex gap-3 items-end">
+              <div id="dr-crew-box" class="hidden"><label class="lbl">Daftar milik</label><select id="dr-crew" class="inp" onchange="muatDeret()"></select></div>
+              <div><label class="lbl">Tanggal ke-</label><input type="number" id="dr-tanggal" min="1" max="31" class="inp text-center font-bold" style="width:90px" onchange="muatDeret()"></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <label class="lbl">Tambah barang ke daftar deret</label>
+          <div class="flex gap-2">
+            <div class="relative flex-1">
+              <input type="text" id="dr-cari" autocomplete="off" placeholder="Nama produk atau scan barcode" class="inp" oninput="cariProduk(this.value,'dr')" onfocus="cariProduk(this.value,'dr')" onkeydown="ddKey(event,'dr')">
+              <div id="dr-dropdown" class="dd hidden"></div>
+            </div>
+            <button onclick="tambahDeretTerpilih()" class="btn btn-o" style="white-space:nowrap">+ Tambah</button>
+          </div>
+          <input type="hidden" id="dr-barcode">
+        </div>
+        <div class="card">
+          <div class="flex justify-between items-center mb-3 gap-3"><h3 id="dr-info" class="font-bold text-base">Daftar barang</h3><button onclick="simpanDeret()" class="btn btn-o">Simpan</button></div>
+          <input type="text" id="dr-filter" placeholder="🔍 Cari di daftar barang (nama / barcode)" class="inp mb-2" autocomplete="off" oninput="ambilInputDeret();renderDeret()" onkeydown="if(event.key==='Enter'){event.preventDefault();enterFilterDeret()}">
+          <p id="dr-note" class="text-xs mb-2" style="color:var(--mut)"></p>
+          <div class="scroll-box" style="max-height:32rem">
+            <table><thead><tr><th>Barang</th><th class="text-center" style="width:90px">Display</th><th class="text-center" style="width:100px">Hitung</th><th></th></tr></thead><tbody id="tabel-deret"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- REPACK -->
+      <div id="section-repack" class="hidden">
+        <div class="card max-w-xl mx-auto" style="padding:2rem">
+          <div class="text-center mb-6"><div class="w-12 h-12 mx-auto mb-2 rounded-xl flex items-center justify-center text-xl" style="background:var(--tint)">📦</div><h2 class="text-xl font-extrabold">Repack / pecah kemasan</h2><p class="text-sm mt-1" style="color:var(--mut)">Cari produk untuk menambah stok eceran</p></div>
+          <div class="space-y-4">
+            <div class="relative">
+              <label class="lbl">Cari produk</label>
+              <input type="text" id="repack-cari" autocomplete="off" placeholder="Nama produk atau barcode" class="inp" oninput="cariProduk(this.value,'repack')" onfocus="cariProduk(this.value,'repack')" onkeydown="ddKey(event,'repack')">
+              <div id="repack-dropdown" class="dd hidden"></div>
+            </div>
+            <div><label class="lbl">Barcode terpilih</label><input type="text" id="repack-barcode" readonly placeholder="Otomatis" class="inp font-mono"></div>
+            <div><label class="lbl">Jumlah penambahan eceran</label><input type="number" id="repack-jumlah" placeholder="Contoh: 15" class="inp"></div>
+            <div><label class="lbl">Keterangan repack</label><input type="text" id="repack-ket" placeholder="Contoh: Buka 1 karung besar 20kg" class="inp"></div>
+            <button onclick="kirimRepack()" class="btn btn-o w-full">Simpan dan tambah stok</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MASTER BARANG -->
+      <div id="section-master" class="hidden space-y-5">
+        <div id="box-tambah-barang" class="card hidden">
+          <h2 class="text-lg font-extrabold mb-4">Tambah produk baru</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+            <input type="text" id="brg-barcode" placeholder="Barcode kemasan" class="inp font-mono">
+            <input type="text" id="brg-kode" placeholder="Kode barang (BRG003)" class="inp">
+            <input type="text" id="brg-nama" placeholder="Nama produk" class="inp">
+            <input type="text" id="brg-kategori" placeholder="Kategori (Makanan/Pasir/Obat)" class="inp">
+            <input type="number" id="brg-harga" placeholder="Harga jual (Rp)" class="inp">
+            <input type="number" id="brg-min" placeholder="Batas stok minimal" class="inp">
+            <input type="number" id="brg-stok" placeholder="Stok awal" class="inp">
+          </div>
+          <button onclick="simpanBarangBaru()" class="btn btn-o">+ Simpan produk</button>
+        </div>
+
+        <div class="card">
+          <div class="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-5">
+            <div><h2 class="text-lg font-extrabold">Daftar master barang</h2><p id="master-info-count" class="text-xs mt-0.5" style="color:var(--mut)">Menampilkan 0 produk</p></div>
+            <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+              <input type="text" id="filter-search" oninput="renderMasterDebounced()" placeholder="🔍 Cari nama / barcode" class="inp sm:w-60">
+              <select id="filter-kategori" onchange="resetPageAndRenderMaster()" class="inp sm:w-44"><option value="">Semua kategori</option></select>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table>
+              <thead><tr><th>Barcode</th><th>Nama produk</th><th>Kategori</th><th>Harga jual</th><th class="text-center">Stok</th><th id="th-aksi-master" class="text-center hidden">Aksi</th></tr></thead>
+              <tbody id="tabel-master"></tbody>
+            </table>
+          </div>
+          <div class="flex items-center justify-between mt-4 pt-4 text-sm" style="border-top:1px solid var(--line)">
+            <span id="pagination-label" class="font-medium" style="color:var(--mut)">Halaman 1</span>
+            <div class="flex gap-2">
+              <button onclick="gantiHalamanMaster(-1)" id="btn-prev-master" class="btn btn-soft" style="padding:.5rem .9rem">← Sebelumnya</button>
+              <button onclick="gantiHalamanMaster(1)" id="btn-next-master" class="btn btn-soft" style="padding:.5rem .9rem">Selanjutnya →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LOG AKTIVITAS -->
+      <div id="section-logs" class="hidden">
+        <div class="card">
+          <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-4">
+            <div><h2 class="text-lg font-extrabold">Log aktivitas operasional</h2><p class="text-xs mt-0.5" style="color:var(--mut)">Riwayat stock deret, repack, dan perubahan data oleh crew</p></div>
+            <button onclick="muatLogAktivitas()" class="btn btn-soft" style="padding:.55rem 1rem">🔄 Refresh log</button>
+          </div>
+          <div class="scroll-box" style="max-height:32rem">
+            <table>
+              <thead><tr><th>Waktu</th><th>User</th><th>Aktivitas</th><th>Detail</th></tr></thead>
+              <tbody id="tabel-logs"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- KELOLA USER -->
+      <div id="section-users" class="hidden">
+        <div class="card max-w-2xl mx-auto" style="padding:2rem">
+          <h2 class="text-lg font-extrabold mb-4">Tambah akun user baru</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+            <input type="text" id="new-user" placeholder="Username" class="inp">
+            <input type="password" id="new-pass" placeholder="Password" class="inp">
+            <select id="new-role" class="inp"><option value="Crew">Crew</option><option value="Head Store">Head Store</option></select>
+          </div>
+          <button onclick="tambahUser()" class="btn btn-o">+ Buat akun</button>
+          <div class="mt-7 pt-5" style="border-top:1px solid var(--line)">
+            <h3 class="text-sm font-bold mb-2">Pengguna terdaftar</h3>
+            <div class="overflow-x-auto"><table><thead><tr><th>ID</th><th>Username</th><th>Role</th></tr></thead><tbody id="tabel-users"></tbody></table></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GANTI PASSWORD -->
+      <div id="section-password" class="hidden">
+        <div class="card max-w-md mx-auto" style="padding:2rem">
+          <h2 class="text-lg font-extrabold mb-4 text-center">Ganti password</h2>
+          <div class="space-y-3">
+            <input type="password" id="pw-lama" placeholder="Password lama" class="inp">
+            <input type="password" id="pw-baru" placeholder="Password baru" class="inp">
+            <button onclick="prosesGantiPassword()" class="btn btn-o w-full">Update password</button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- MODAL EDIT -->
+<div id="modal-edit" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4" style="background:rgba(15,23,42,.45)">
+  <div class="card w-full max-w-md" style="padding:1.5rem;max-height:92vh;overflow:auto">
+    <div class="flex justify-between items-center mb-4"><h3 class="text-lg font-extrabold">Edit data produk</h3><button onclick="tutupModalEdit()" style="color:var(--mut)">✕</button></div>
+    <input type="hidden" id="edit-barcode-lama">
+    <div class="space-y-3">
+      <div><label class="lbl">Barcode</label><input type="text" id="edit-barcode" class="inp font-mono"></div>
+      <div><label class="lbl">Nama produk</label><input type="text" id="edit-nama" class="inp"></div>
+      <div><label class="lbl">Kategori</label><input type="text" id="edit-kategori" class="inp"></div>
+      <div class="grid grid-cols-3 gap-2">
+        <div><label class="lbl">Harga (Rp)</label><input type="number" id="edit-harga" class="inp"></div>
+        <div><label class="lbl">Stok min</label><input type="number" id="edit-min" class="inp"></div>
+        <div><label class="lbl">Stok akhir</label><input type="number" id="edit-stok" class="inp"></div>
+      </div>
+    </div>
+    <div class="flex gap-2 mt-5">
+      <button onclick="tutupModalEdit()" class="btn btn-soft flex-1">Batal</button>
+      <button onclick="simpanEditBarang()" class="btn btn-o flex-1">Simpan perubahan</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-50 px-4 py-3 rounded-xl text-sm font-semibold text-white shadow-lg" style="background:var(--ink)"></div>
+
+<script>
+let currentUser = null, allMasterItems = [], currentPageMaster = 1, masterView = [], ddHits = {}, ddIdx = {};
+const itemsPerPage = 15;
+const ROLE_HEAD = 'Head Store', ROLE_CREW = 'Crew';   // samakan persis dengan isi kolom Role di sheet Users
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const rp = n => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+const hl = (t, q) => { const s = String(t ?? ''), i = s.toLowerCase().indexOf(q); return i < 0 ? esc(s) : esc(s.slice(0, i)) + '<mark>' + esc(s.slice(i, i + q.length)) + '</mark>' + esc(s.slice(i + q.length)); };
+
+function toast(m) {
+  const t = $('toast'); t.textContent = m; t.classList.remove('hidden');
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.add('hidden'), 3000);
+}
+
+$('dr-tanggal').value = new Date().getDate();
+$('header-date').innerText = new Date().toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+
+window.onload = () => {
+  try { const s = localStorage.getItem('petshop_user'); if (s) { currentUser = JSON.parse(s); tampilkanAplikasi(currentUser); } } catch (e) {}
+};
+document.addEventListener('click', e => {
+  ['dr', 'repack'].forEach(m => { if (!$(m + '-cari').parentElement.contains(e.target)) tutupDd(m); });
+});
+
+function tampilkanAplikasi(user) {
+  $('view-login').classList.add('hidden');
+  $('view-app').classList.remove('hidden');
+  $('sidebar-username').innerText = user.username;
+  $('sidebar-role').innerText = user.role;
+  $('avatar-initial').innerText = user.username.charAt(0).toUpperCase();
+  const kepala = user.role === ROLE_HEAD;
+  $('box-tambah-barang').classList.toggle('hidden', !kepala);
+  $('th-aksi-master').classList.toggle('hidden', !kepala);
+  setupSidebarMenu(user.role);
+  syncDatabase(false);
+}
+
+function handleLogin() {
+  const btn = $('btn-login'), err = $('login-error');
+  err.classList.add('hidden'); btn.innerText = 'Memeriksa...'; btn.disabled = true;
+  google.script.run.withSuccessHandler(res => {
+    btn.innerText = 'Masuk'; btn.disabled = false;
+    if (res.status === 'success') {
+      currentUser = res;
+      try { localStorage.setItem('petshop_user', JSON.stringify(res)); } catch (e) {}
+      tampilkanAplikasi(res);
+    } else { err.innerText = res.message; err.classList.remove('hidden'); }
+  }).prosesLogin($('username').value, $('password').value);
+}
+
+function setupSidebarMenu(role) {
+  const menus = role === ROLE_HEAD
+    ? [['dashboard','📊','Dashboard utama'],['deret','🗃️','Stock deret'],['repack','📦','Repack barang'],['master','🗂️','Master barang'],['logs','🕒','Log aktivitas'],['users','👥','Kelola user'],['password','🔒','Ganti password']]
+    : [['dashcrew','📊','Dashboard'],['deret','🗃️','Stock deret'],['repack','📦','Repack barang'],['master','🏷️','Cek harga & stok'],['password','🔒','Ganti password']];
+  const nav = $('menu-nav');
+  nav.innerHTML = menus.map(m => `<button onclick="switchTab('${m[0]}','${m[2]}',this)" class="nav-btn"><span>${m[1]}</span><span>${m[2]}</span></button>`).join('');
+  switchTab(menus[0][0], menus[0][2], nav.querySelector('button'));
+}
+
+function switchTab(tab, title, btn) {
+  ['dashboard','dashcrew','deret','repack','master','logs','users','password'].forEach(t => { const el = $('section-' + t); if (el) el.classList.add('hidden'); });
+  const target = $('section-' + tab); if (target) target.classList.remove('hidden');
+  if (title) $('page-title').innerText = title;
+  if (tab === 'logs') muatLogAktivitas();
+  if (tab === 'deret') muatDeret();
+  if (tab === 'dashcrew') muatDashCrew();
+  if (tab === 'dashboard') { muatPermintaan(); muatDashHead(); }
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('on'));
+  if (btn) btn.classList.add('on');
+  if (window.innerWidth < 1024) { $('sidebar').classList.add('-translate-x-full'); $('sidebar-overlay').classList.add('hidden'); }
+}
+
+function toggleSidebar() { $('sidebar').classList.toggle('-translate-x-full'); $('sidebar-overlay').classList.toggle('hidden'); }
+
+// ============ PENCARIAN PRODUK (lokal, debounce, keyboard) ============
+function cariProduk(kw, mode) {
+  clearTimeout(cariProduk.t);
+  if (document.activeElement === $(mode + '-cari') && kw !== $(mode + '-cari').dataset.picked) $(mode + '-barcode').value = '';
+  const q = kw.trim().toLowerCase();
+  if (!q) return tutupDd(mode);
+  cariProduk.t = setTimeout(() => {
+    if (!allMasterItems.length) {
+      google.script.run.withSuccessHandler(l => renderDd(mode, l || [], q)).cariProdukByKeyword(kw);
+      return;
+    }
+    const hits = allMasterItems
+      .filter(i => String(i.nama).toLowerCase().includes(q) || String(i.barcode).toLowerCase().includes(q))
+      .sort((a, b) => (String(b.barcode).toLowerCase() === q) - (String(a.barcode).toLowerCase() === q))
+      .slice(0, 8);
+    renderDd(mode, hits, q);
+  }, 120);
+}
+
+function renderDd(mode, list, q) {
+  ddHits[mode] = list; ddIdx[mode] = list.length ? 0 : -1;
+  const d = $(mode + '-dropdown');
+  d.innerHTML = list.length ? list.map((i, n) => `
+    <div class="dd-i${n ? '' : ' on'}" onmousedown="event.preventDefault();pilihIdx('${mode}',${n})">
+      <p class="text-sm font-semibold">${hl(i.nama, q)}</p>
+      <div class="flex justify-between mt-0.5 text-xs" style="color:var(--mut)"><span class="font-mono">${hl(i.barcode, q)}</span><span>Stok: <b>${esc(i.stok)}</b></span></div>
+    </div>`).join('') : '<div class="p-3 text-sm text-center" style="color:var(--mut)">Produk tidak ditemukan</div>';
+  d.classList.remove('hidden');
+}
+
+function tutupDd(mode) { $(mode + '-dropdown').classList.add('hidden'); }
+
+function ddKey(e, mode) {
+  const d = $(mode + '-dropdown'), h = ddHits[mode] || [];
+  if (e.key === 'Escape') return tutupDd(mode);
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault(); if (!h.length) return;
+    ddIdx[mode] = (ddIdx[mode] + (e.key === 'ArrowDown' ? 1 : -1) + h.length) % h.length;
+    d.querySelectorAll('.dd-i').forEach((x, n) => { x.classList.toggle('on', n === ddIdx[mode]); if (n === ddIdx[mode]) x.scrollIntoView({ block: 'nearest' }); });
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    const q = e.target.value.trim().toLowerCase();
+    const exact = allMasterItems.find(i => String(i.barcode).toLowerCase() === q);   // hasil scan barcode
+    if (exact) return pilihProduk(exact.barcode, exact.nama, mode);
+    if (h.length && !d.classList.contains('hidden')) pilihIdx(mode, Math.max(ddIdx[mode], 0));
+  }
+}
+
+function pilihIdx(mode, n) { const i = (ddHits[mode] || [])[n]; if (i) pilihProduk(i.barcode, i.nama, mode); }
+
+function pilihProduk(barcode, nama, mode) {
+  if (mode === 'dr') { $('dr-cari').value = nama; $('dr-cari').dataset.picked = nama; $('dr-barcode').value = barcode; tutupDd('dr'); return; }
+  const inp = $(mode + '-cari');
+  inp.value = nama; inp.dataset.picked = nama;
+  $(mode + '-barcode').value = barcode;
+  tutupDd(mode);
+  $(mode + '-jumlah').focus();
+}
+
+// ============ STOCK DERET ============
+let deretItems = [];
+const ownerDeret = () => (currentUser.role === ROLE_HEAD && $('dr-crew').value) || currentUser.username;
+const nilai = x => (x === '' || x === null || x === undefined) ? '-' : x;
+const namaBulan = p => { const [y, m] = String(p || '').split('-'); return y ? new Date(y, m - 1, 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }) : '-'; };
+
+function muatDeret() {
+  const tgl = Number($('dr-tanggal').value) || new Date().getDate();
+  $('tabel-deret').innerHTML = '<tr><td colspan="4" class="text-center py-6" style="color:var(--mut)">Memuat...</td></tr>';
+  google.script.run.withSuccessHandler(res => {
+    deretItems = res.items || [];
+    if (currentUser.role === ROLE_HEAD) {
+      const sel = $('dr-crew'), cur = sel.value;
+      sel.innerHTML = '<option value="">Daftar saya</option>' + (res.users || []).filter(u => u !== currentUser.username).map(u => `<option value="${esc(u)}">${esc(u)}</option>`).join('');
+      sel.value = cur;
+      $('dr-crew-box').classList.remove('hidden');
+    }
+    renderDeret();
+  }).getDeret(currentUser.username, tgl, ownerDeret());
+}
+
+function ambilInputDeret() {
+  document.querySelectorAll('#tabel-deret input[data-n]').forEach(el => { deretItems[el.dataset.n][el.dataset.f] = el.value; });
+}
+
+function renderDeret() {
+  const q = ($('dr-filter').value || '').toLowerCase().trim();
+  const semua = deretItems.map((it, n) => ({ it, n }));
+  const hasil = q ? semua.filter(x => String(x.it.nama).toLowerCase().includes(q) || String(x.it.barcode).toLowerCase().includes(q)) : semua.slice().reverse();   // tanpa pencarian: terbaru di atas
+  const batas = q ? 10 : 5, tampil = hasil.slice(0, batas);
+  $('dr-info').innerText = `Daftar barang (${deretItems.length})`;
+  $('dr-note').innerText = !deretItems.length ? '' : q
+    ? `Menampilkan ${tampil.length} dari ${hasil.length} hasil${hasil.length > batas ? ', persempit pencarian untuk melihat yang lain' : ''}`
+    : `Menampilkan ${tampil.length} barang terbaru dari ${deretItems.length}. Cari untuk menampilkan barang lain.`;
+  const inp = (n, f, v, off) => `<input type="number" inputmode="numeric" min="0" data-n="${n}" data-f="${f}" value="${esc(v)}" placeholder="-" ${off ? 'disabled' : ''} ${f === 'jumlah' ? 'onkeydown="enterHitung(event)"' : ''} class="inp text-center font-bold" ${off ? 'style="opacity:.5"' : ''}>`;
+  $('tabel-deret').innerHTML = tampil.length ? tampil.map(({ it: i, n }) => {
+    const tunggu = i.status === 'Menunggu';
+    return `<tr>
+      <td onclick="fokusHitung(${n})" style="cursor:pointer"><p class="font-semibold">${esc(i.nama)}</p><p class="text-xs" style="color:var(--mut)"><span class="font-mono">${esc(i.barcode)}</span> · Awal ${nilai(i.awal)} · Min ${nilai(i.min)}</p>${tunggu ? '<span class="badge" style="background:#fef3c7;color:#92400e;margin-top:.25rem">Menunggu persetujuan Head Store</span>' : ''}</td>
+      <td>${inp(n, 'display', i.display, tunggu)}</td>
+      <td>${inp(n, 'jumlah', i.jumlah, tunggu)}</td>
+      <td class="text-center"><button onclick="hapusDeretItem(${n})" class="btn btn-red" style="padding:.3rem .6rem;font-size:.75rem">Hapus</button></td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="4" class="text-center py-6" style="color:var(--mut)">${deretItems.length ? 'Tidak ada barang yang cocok.' : 'Daftar masih kosong. Cari barang di atas lalu klik Tambah.'}</td></tr>`;
+}
+
+// Klik barang (atau Enter setelah scan) langsung mengarahkan kursor ke kolom Hitung
+function fokusHitung(n) {
+  const el = document.querySelector(`#tabel-deret input[data-n="${n}"][data-f="jumlah"]`);
+  if (!el) return;
+  if (el.disabled) return toast('Barang ini masih menunggu persetujuan Head Store');
+  el.focus(); el.select();
+}
+
+function enterFilterDeret() {
+  const q = $('dr-filter').value.trim().toLowerCase();
+  if (!q) return;
+  const cocok = deretItems.map((it, n) => ({ it, n })).filter(x => String(x.it.barcode).toLowerCase() === q || String(x.it.nama).toLowerCase().includes(q));
+  const exact = cocok.find(x => String(x.it.barcode).toLowerCase() === q);
+  if (exact) return fokusHitung(exact.n);
+  if (cocok.length === 1) return fokusHitung(cocok[0].n);
+  toast(cocok.length ? 'Pilih barang dari daftar yang tampil' : 'Barang tidak ada di daftar deret');
+}
+
+function enterHitung(e) { if (e.key === 'Enter') { e.preventDefault(); simpanDeret(); } }
+
+function tambahDeretTerpilih() {
+  const b = $('dr-barcode').value;
+  if (!b) return toast('Pilih barang dari hasil pencarian dulu');
+  tambahKeDeret(b);
+}
+
+function tambahKeDeret(barcode) {
+  ambilInputDeret();
+  google.script.run.withSuccessHandler(res => {
+    toast(res.message);
+    if (res.status === 'success') {
+      deretItems = deretItems.concat(res.items); $('dr-filter').value = ''; renderDeret();
+      $('dr-cari').value = ''; $('dr-cari').dataset.picked = ''; $('dr-barcode').value = ''; $('dr-cari').focus();
+    }
+  }).tambahDeret(currentUser.username, [barcode], ownerDeret());
+}
+
+function hapusDeretItem(n) {
+  const i = deretItems[n]; if (!i) return;
+  if (!confirm(`Hapus "${i.nama}" dari daftar deret? Hitungan barang ini bulan ini ikut terhapus.`)) return;
+  ambilInputDeret();
+  google.script.run.withSuccessHandler(res => {
+    toast(res.message);
+    if (res.status === 'success') { deretItems.splice(n, 1); renderDeret(); }
+  }).hapusDeret(currentUser.username, i.barcode, ownerDeret());
+}
+
+function simpanDeret() {
+  ambilInputDeret();
+  const tgl = Number($('dr-tanggal').value);
+  if (!(tgl >= 1 && tgl <= 31)) return toast('Tanggal harus 1 sampai 31');
+  const entries = deretItems.map(i => ({ barcode: i.barcode, jumlah: i.jumlah, display: i.display })).filter(e => e.jumlah !== '' || e.display !== '');
+  if (!entries.length) return toast('Isi minimal satu hitungan atau stok display');
+  google.script.run.withSuccessHandler(res => {
+    toast(res.message);
+    if (res.status === 'success') { $('dr-filter').value = ''; renderDeret(); $('dr-filter').focus(); }   // siap scan barang berikutnya
+  }).simpanHitungDeret(currentUser.username, tgl, entries, ownerDeret());
+}
+
+function gambarHarian(el, harian) {
+  const max = Math.max(1, ...harian);
+  el.innerHTML = harian.map((v, i) => `<div title="Tgl ${i + 1}: ${v} pcs" style="flex:1;height:100%;display:flex;align-items:flex-end"><div style="width:100%;height:${Math.round(v / max * 100)}%;min-height:${v ? 3 : 0}px;background:var(--o);border-radius:3px 3px 0 0"></div></div>`).join('');
+}
+
+function gambarTerlaris(el, list, denganCrew) {
+  const top = list.slice(0, 5), max = Math.max(1, ...top.map(i => i.terjual));
+  el.innerHTML = top.length ? top.map(i => `<div><div class="flex justify-between text-sm"><span class="font-medium truncate pr-2">${esc(i.nama)}${denganCrew ? ' <span style="color:var(--mut)">· ' + esc(i.user) + '</span>' : ''}</span><b>${i.terjual}</b></div><div class="h-2 rounded-full mt-1" style="background:#f1f5f9"><div class="h-2 rounded-full" style="width:${Math.round(i.terjual / max * 100)}%;background:var(--o)"></div></div></div>`).join('')
+    : '<p class="text-sm" style="color:var(--mut)">Belum ada penjualan pada rentang ini.</p>';
+}
+
+function gambarIsiUlang(el, list, denganCrew) {
+  el.innerHTML = list.length ? list.slice(0, 10).map(i => `<tr><td><p class="font-semibold">${esc(i.nama)}</p><p class="text-xs" style="color:var(--mut)">${denganCrew ? esc(i.user) + ' · ' : ''}<span class="font-mono">${esc(i.barcode)}</span></p></td>
+      <td class="text-center font-bold" style="color:#c62828">${nilai(i.terakhir)}</td><td class="text-center">${nilai(i.min)}</td><td class="text-center">${nilai(i.display)}</td><td class="text-center font-bold" style="color:var(--o2)">${nilai(i.isi)}</td></tr>`).join('')
+      + (list.length > 10 ? `<tr><td colspan="5" class="text-center text-xs" style="color:var(--mut)">dan ${list.length - 10} barang lainnya</td></tr>` : '')
+    : '<tr><td colspan="5" class="text-center py-6" style="color:var(--mut)">Semua barang aman di atas stok minimal</td></tr>';
+}
+
+function muatDashCrew() {
+  muatPreview('pc');
+  google.script.run.withSuccessHandler(res => {
+    $('cx-total-item').innerText = res.totalItem + ' item';
+    $('cx-total-terjual').innerText = res.totalTerjual + ' pcs';
+    $('cx-rendah').innerText = res.totalRendah + ' item';
+    $('cx-periode').innerText = 'Periode ' + namaBulan(res.periode) + ' · Tgl ' + ($('cx-start').value || 1) + ' s/d ' + ($('cx-end').value || 31) + ' · terjual = total penurunan hitungan antar hari';
+    gambarHarian($('cx-harian'), res.harian);
+    gambarTerlaris($('cx-terlaris'), res.items.filter(i => i.terjual > 0).sort((a, b) => b.terjual - a.terjual));
+    gambarIsiUlang($('tabel-cx-isi'), res.items.filter(i => i.rendah).sort((a, b) => a.terakhir - b.terakhir));
+    const tampil = res.items.slice().sort((a, b) => b.terjual - a.terjual).slice(0, 10);
+    $('cx-rincian-note').innerText = res.items.length > 10 ? `Menampilkan 10 barang dengan penjualan tertinggi dari ${res.items.length}. Unduh Excel untuk data lengkap.` : '';
+    $('tabel-cx').innerHTML = tampil.length ? tampil.map(i => `<tr><td><p class="font-semibold">${esc(i.nama)}</p><p class="font-mono text-xs" style="color:var(--mut)">${esc(i.barcode)}</p></td>
+        <td class="text-center">${nilai(i.awal)}</td>
+        <td class="text-center font-bold" style="${i.rendah ? 'color:#c62828' : ''}">${nilai(i.terakhir)}</td>
+        <td class="text-center font-bold" style="color:var(--o2)">${i.terjual}</td>
+        <td class="text-center">${nilai(i.min)}</td><td class="text-center">${nilai(i.display)}</td></tr>`).join('')
+      : '<tr><td colspan="6" class="text-center py-6" style="color:var(--mut)">Belum ada barang di daftar deret.</td></tr>';
+  }).getDashboardDeret(currentUser.username, $('cx-start').value, $('cx-end').value);
+}
+
+// ============ PRATINJAU REKAP (Head Store = pv, Crew = pc) ============
+const PV_PER = 10;                                      // jumlah baris pratinjau per halaman
+const PV = {
+  pv: { s: 'exp-start', e: 'exp-end', crew: () => $('hd-crew').value, cache: null, req: 0, page: 1 },
+  pc: { s: 'cx-start',  e: 'cx-end',  crew: () => '',                 cache: null, req: 0, page: 1 }
+};
+const pvKey = (c, s, e) => [c, s, e].join('|');
+
+function pvKosong(p, pesan) {
+  const o = PV[p]; o.cache = null; o.page = 1;
+  $(p + '-head').innerHTML = ''; $(p + '-body').innerHTML = '';
+  $(p + '-info').innerText = pesan;
+  $(p + '-page').innerText = ''; $(p + '-prev').disabled = true; $(p + '-next').disabled = true;
+}
+
+function renderPreview(p) {
+  const o = PV[p]; if (!o.cache) return;
+  const res = o.cache.res, total = res.rows.length, pages = Math.max(1, Math.ceil(total / PV_PER));
+  o.page = Math.min(Math.max(o.page, 1), pages);
+  const from = (o.page - 1) * PV_PER, rows = res.rows.slice(from, from + PV_PER);
+  const sel = v => (v === '' || v === null || v === undefined) ? '<span style="color:#cbd5e1">-</span>' : esc(v);
+  $(p + '-head').innerHTML = '<tr>' + res.header.map(h => `<th>${esc(String(h).replace(/_/g, ' '))}</th>`).join('') + '</tr>';
+  $(p + '-body').innerHTML = rows.map(r => '<tr>' + r.map((v, k) => `<td${k === 1 ? ' class="font-mono text-xs"' : ''}>${sel(v)}</td>`).join('') + '</tr>').join('');
+  $(p + '-info').innerText = `${o.cache.label} · Tgl ${o.cache.s} s/d ${o.cache.e} · ${total} barang · menampilkan ${from + 1}-${from + rows.length}`;
+  $(p + '-page').innerText = `Halaman ${o.page} dari ${pages}`;
+  $(p + '-prev').disabled = o.page <= 1;
+  $(p + '-next').disabled = o.page >= pages;
+}
+
+function gantiHalamanPv(p, d) { PV[p].page += d; renderPreview(p); }
+
+function muatPreview(p) {
+  if (!currentUser) return;
+  const o = PV[p], s = Number($(o.s).value) || 1, e = Number($(o.e).value) || 31, crew = o.crew(), req = ++o.req;
+  if (s > e) return pvKosong(p, 'Tanggal awal tidak boleh lebih besar dari tanggal akhir');
+  $(p + '-info').innerText = 'Memuat data...';
+  google.script.run
+    .withSuccessHandler(res => {
+      if (req !== o.req) return;                        // abaikan respons lama kalau filter sudah berubah lagi
+      if (!res || res.status !== 'success') return pvKosong(p, res ? res.message : 'Gagal memuat data');
+      o.cache = { key: pvKey(crew, s, e), label: crew || (p === 'pc' ? currentUser.username : 'Semua crew'), s, e, res };
+      o.page = 1;                                       // filter baru selalu mulai dari halaman 1
+      renderPreview(p);
+    })
+    .withFailureHandler(err => { if (req === o.req) pvKosong(p, 'Gagal memuat: ' + err.message); })
+    .getDataExport(currentUser.username, s, e, crew);
+}
+
+function muatDashHead() {
+  if (!currentUser || currentUser.role !== ROLE_HEAD) return;
+  muatPreview('pv');
+  google.script.run.withSuccessHandler(res => {
+    if (!res) return;
+    const sel = $('hd-crew'), cur = sel.value;
+    sel.innerHTML = '<option value="">Semua crew</option>' + res.crews.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    sel.value = cur;
+    $('hd-item').innerText = res.totalItem + ' item';
+    $('hd-terjual').innerText = res.totalTerjual + ' pcs';
+    $('hd-rendah').innerText = res.totalRendah + ' item';
+    $('hd-periode').innerText = 'Periode ' + namaBulan(res.periode) + ' · Tgl ' + ($('exp-start').value || 1) + ' s/d ' + ($('exp-end').value || 31);
+    gambarHarian($('hd-harian'), res.harian);
+    gambarTerlaris($('hd-terlaris'), res.terlaris, true);
+    gambarIsiUlang($('tabel-hd-isi'), res.rendahList, true);
+    $('tabel-hd-crew').innerHTML = res.perCrew.length ? res.perCrew.map(c => `<tr><td class="font-semibold">${esc(c.user)}</td><td class="text-center">${c.item}</td><td class="text-center font-bold" style="color:var(--o2)">${c.terjual}</td><td class="text-center font-bold" style="${c.rendah ? 'color:#c62828' : ''}">${c.rendah}</td></tr>`).join('')
+      : '<tr><td colspan="4" class="text-center py-6" style="color:var(--mut)">Belum ada data stock deret.</td></tr>';
+  }).getDashboardHead(currentUser.username, $('exp-start').value, $('exp-end').value, $('hd-crew').value);
+}
+
+let reqList = [];
+function muatPermintaan() {
+  if (!currentUser || currentUser.role !== ROLE_HEAD) return;
+  google.script.run.withSuccessHandler(list => {
+    reqList = list || [];
+    $('box-permintaan').classList.toggle('hidden', !reqList.length);
+    $('req-count').innerText = reqList.length;
+    $('tabel-permintaan').innerHTML = reqList.map((r, n) => `<tr><td class="font-semibold">${esc(r.user)}</td><td><p>${esc(r.nama)}</p><p class="font-mono text-xs" style="color:var(--mut)">${esc(r.barcode)}</p></td><td class="text-right whitespace-nowrap"><button onclick="putusPermintaan(${n},true)" class="btn btn-o" style="padding:.35rem .8rem;font-size:.75rem">Setujui</button> <button onclick="putusPermintaan(${n},false)" class="btn btn-red" style="padding:.35rem .8rem;font-size:.75rem">Tolak</button></td></tr>`).join('');
+  }).getMenungguDeret(currentUser.username);
+}
+
+function putusPermintaan(n, setuju) {
+  const r = reqList[n]; if (!r) return;
+  google.script.run.withSuccessHandler(res => { toast(res.message); muatPermintaan(); }).putusDeret(currentUser.username, r.user, r.barcode, setuju);
+}
+
+function tutupBulan() {
+  if (!confirm('Tutup bulan stock deret? Data bulan ini diarsipkan ke sheet baru, Stok Awal diisi dari hitungan terakhir, Stok Minimal diisi total terjual x 2, lalu kolom Tgl dikosongkan.')) return;
+  toast('Memproses tutup bulan...');
+  google.script.run.withSuccessHandler(res => toast(res.message)).tutupBulanDeret(currentUser.username);
+}
+
+// ============ SINKRONISASI ============
+function syncDatabase(showAlert = false) {
+  google.script.run.withSuccessHandler(data => {
+    $('val-total-stok').innerText = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(data.totalNominalStok);
+    $('val-stok-min').innerText = data.stokMenipis.length + ' produk';
+    $('tabel-menipis').innerHTML = data.stokMenipis.length === 0
+      ? '<tr><td colspan="4" class="text-center py-6 font-semibold" style="color:#475569">Semua stok aman di atas batas minimal ✨</td></tr>'
+      : data.stokMenipis.map(i => `<tr><td class="font-semibold">${esc(i.nama)}</td><td class="text-center font-extrabold" style="color:#c62828">${esc(i.stok)}</td><td class="text-center" style="color:var(--mut)">${esc(i.stokMin)}</td><td class="text-xs" style="color:var(--mut);max-width:16rem"><div class="truncate" title="${esc(i.keterangan)}">${esc(i.keterangan) || '-'}</div></td></tr>`).join('');
+    allMasterItems = data.items || [];
+    renderKategori();
+    populateKategoriDropdown();
+    renderMasterTable();
+    if (showAlert) toast('Sinkronisasi data berhasil');
+  }).getDataDashboard();
+
+  if (currentUser && currentUser.role === ROLE_HEAD) {
+    google.script.run.withSuccessHandler(users => {
+      $('tabel-users').innerHTML = users.map(u => `<tr><td class="text-xs" style="color:var(--mut)">${esc(u.id)}</td><td class="font-semibold">${esc(u.username)}</td><td><span class="badge">${esc(u.role)}</span></td></tr>`).join('');
+    }).getDaftarUsers(currentUser.username);
+  }
+}
+
+// ============ MASTER BARANG ============
+function renderKategori() {
+  $('val-total-produk').innerText = allMasterItems.length + ' produk';
+  const m = {};
+  allMasterItems.forEach(i => { const k = i.kategori || 'Lainnya'; m[k] = (m[k] || 0) + Number(i.stok || 0); });
+  const rows = Object.entries(m).sort((a, b) => b[1] - a[1]), max = Math.max(1, ...rows.map(r => r[1]));
+  $('chart-kategori').innerHTML = rows.length ? rows.map(([k, v]) => `<div class="flex items-center gap-3 text-sm"><span class="w-32 truncate font-medium" title="${esc(k)}">${esc(k)}</span><div class="flex-1 h-2.5 rounded-full" style="background:#f1f5f9"><div class="h-2.5 rounded-full" style="width:${Math.round(v / max * 100)}%;background:var(--o)"></div></div><span class="w-14 text-right font-bold">${v}</span></div>`).join('') : '<p class="text-sm" style="color:var(--mut)">Belum ada data.</p>';
+}
+
+function populateKategoriDropdown() {
+  const sel = $('filter-kategori'), cur = sel.value;
+  const kats = [...new Set(allMasterItems.map(i => i.kategori).filter(Boolean))];
+  sel.innerHTML = '<option value="">Semua kategori</option>' + kats.map(k => `<option value="${esc(k)}">${esc(k)}</option>`).join('');
+  sel.value = cur;
+}
+function resetPageAndRenderMaster() { currentPageMaster = 1; renderMasterTable(); }
+function renderMasterDebounced() { clearTimeout(renderMasterDebounced.t); renderMasterDebounced.t = setTimeout(resetPageAndRenderMaster, 150); }
+function gantiHalamanMaster(d) { currentPageMaster += d; renderMasterTable(); }
+
+function renderMasterTable() {
+  const q = $('filter-search').value.toLowerCase().trim(), kat = $('filter-kategori').value;
+  const kepala = currentUser && currentUser.role === ROLE_HEAD;
+  const filtered = allMasterItems.filter(i =>
+    (!q || String(i.nama).toLowerCase().includes(q) || String(i.barcode).toLowerCase().includes(q)) && (!kat || i.kategori === kat));
+  const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+  currentPageMaster = Math.min(Math.max(currentPageMaster, 1), totalPages);
+  masterView = filtered.slice((currentPageMaster - 1) * itemsPerPage, currentPageMaster * itemsPerPage);
+
+  $('master-info-count').innerText = `Menampilkan ${masterView.length} dari ${filtered.length} produk`;
+  $('pagination-label').innerText = `Halaman ${currentPageMaster} dari ${totalPages}`;
+  $('btn-prev-master').disabled = currentPageMaster <= 1;
+  $('btn-next-master').disabled = currentPageMaster >= totalPages;
+
+  $('tabel-master').innerHTML = masterView.length === 0
+    ? `<tr><td colspan="${kepala ? 6 : 5}" class="text-center py-6" style="color:var(--mut)">Tidak ada produk yang cocok.</td></tr>`
+    : masterView.map((i, n) => `
+      <tr>
+        <td class="font-mono text-xs" style="color:var(--mut)">${esc(i.barcode)}</td>
+        <td class="font-semibold">${esc(i.nama)}</td>
+        <td><span class="badge">${esc(i.kategori || '-')}</span></td>
+        <td class="font-bold" style="color:var(--o2)">${rp(i.harga)}</td>
+        <td class="text-center font-extrabold" style="${Number(i.stok) <= Number(i.stokMin) ? 'color:#c62828' : ''}">${esc(i.stok)}</td>
+        ${kepala ? `<td class="text-center whitespace-nowrap"><button onclick="editIdx(${n})" class="btn btn-soft" style="padding:.3rem .7rem;font-size:.75rem">Edit</button> <button onclick="hapusIdx(${n})" class="btn btn-red" style="padding:.3rem .7rem;font-size:.75rem">Hapus</button></td>` : ''}
+      </tr>`).join('');
+}
+
+function editIdx(n) {
+  const i = masterView[n]; if (!i) return;
+  $('edit-barcode-lama').value = i.barcode; $('edit-barcode').value = i.barcode; $('edit-nama').value = i.nama;
+  $('edit-kategori').value = i.kategori || ''; $('edit-harga').value = i.harga; $('edit-min').value = i.stokMin; $('edit-stok').value = i.stok;
+  $('modal-edit').classList.remove('hidden');
+}
+function tutupModalEdit() { $('modal-edit').classList.add('hidden'); }
+
+function simpanEditBarang() {
+  const bBaru = $('edit-barcode').value, nama = $('edit-nama').value;
+  if (!bBaru || !nama) return toast('Barcode dan nama produk wajib diisi');
+  google.script.run.withSuccessHandler(res => {
+    toast(res.message);
+    if (res.status === 'success') { tutupModalEdit(); syncDatabase(false); }
+  }).editMasterBarang($('edit-barcode-lama').value, bBaru, nama, $('edit-kategori').value, $('edit-harga').value, $('edit-min').value, $('edit-stok').value, currentUser.username);
+}
+
+function hapusIdx(n) {
+  const i = masterView[n]; if (!i) return;
+  if (!confirm(`Yakin hapus produk "${i.nama}" secara permanen?`)) return;
+  google.script.run.withSuccessHandler(res => {
+    toast(res.message);
+    if (res.status === 'success') syncDatabase(false);
+  }).hapusMasterBarang(i.barcode, currentUser.username);
+}
+
+// ============ LOG ============
+function muatLogAktivitas() {
+  google.script.run.withSuccessHandler(logs => {
+    $('tabel-logs').innerHTML = !logs || !logs.length
+      ? '<tr><td colspan="4" class="text-center py-6" style="color:var(--mut)">Belum ada catatan aktivitas.</td></tr>'
+      : logs.map(l => {
+        const a = String(l.aksi || '');
+        const style = (a === 'STOCK DERET' || a === 'TUTUP BULAN') ? 'background:var(--tint);color:var(--o2)' : a === 'REPACK' ? 'background:#e0f2fe;color:#0369a1' : (a.includes('EDIT') || a.includes('HAPUS')) ? 'background:#fff1f0;color:#c62828' : 'background:#f1f5f9;color:#475569';
+        return `<tr><td class="text-xs font-mono whitespace-nowrap" style="color:var(--mut)">${esc(l.waktu)}</td><td class="font-bold">${esc(l.user)}</td><td><span class="badge" style="${style}">${esc(a)}</span></td><td class="text-xs" style="color:#475569">${esc(l.detail)}</td></tr>`;
+      }).join('');
+  }).getLogAktivitas(currentUser.username);
+}
+
+// ============ TRANSAKSI ============
+function kirimRepack() {
+  const barcode = $('repack-barcode').value, jumlah = $('repack-jumlah').value, ket = $('repack-ket').value;
+  if (!barcode || !jumlah) return toast('Pilih produk dari hasil pencarian dan isi jumlah penambahan');
+  google.script.run.withSuccessHandler(res => {
+    if (res.status === 'success') {
+      toast(`Repack berhasil: stok ${res.nama} menjadi ${res.stokBaru}`);
+      ['repack-cari', 'repack-barcode', 'repack-jumlah', 'repack-ket'].forEach(id => $(id).value = '');
+      $('repack-cari').dataset.picked = ''; $('repack-cari').focus();
+      syncDatabase(false);
+    } else toast(res.message);
+  }).prosesRepackBarang(barcode, Number(jumlah), ket, currentUser.username);
+}
+
+function simpanBarangBaru() {
+  const v = id => $(id).value;
+  if (!v('brg-barcode') || !v('brg-nama')) return toast('Barcode dan nama produk wajib diisi');
+  google.script.run.withSuccessHandler(res => {
+    toast(res.message);
+    if (res.status !== 'success') return;
+    ['brg-barcode','brg-kode','brg-nama','brg-kategori','brg-harga','brg-min','brg-stok'].forEach(id => $(id).value = '');
+    syncDatabase(false);
+  }).tambahBarangBaru(v('brg-barcode'), v('brg-kode'), v('brg-nama'), v('brg-kategori'), v('brg-harga'), v('brg-min'), v('brg-stok'), currentUser.username);
+}
+
+function tambahUser() {
+  const u = $('new-user').value, p = $('new-pass').value, r = $('new-role').value;
+  if (!u || !p) return toast('Username dan password wajib diisi');
+  google.script.run.withSuccessHandler(res => {
+    toast(res.message);
+    if (res.status !== 'success') return;
+    $('new-user').value = ''; $('new-pass').value = '';
+    syncDatabase(false);
+  }).tambahUserBaru(u, p, r, currentUser.username);
+}
+
+function prosesGantiPassword() {
+  const lama = $('pw-lama').value, baru = $('pw-baru').value;
+  if (!lama || !baru) return toast('Isi password lama dan baru');
+  google.script.run.withSuccessHandler(res => {
+    toast(res.message);
+    if (res.status === 'success') { $('pw-lama').value = ''; $('pw-baru').value = ''; }
+  }).gantiPassword(currentUser.username, lama, baru);
+}
+
+function tulisExcel(res) {
+  try {
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([res.header].concat(res.rows)), 'Stock Deret');
+    XLSX.writeFile(wb, res.name);
+    toast('File Excel diunduh: ' + res.name);
+  } catch (err) { toast('Gagal membuat file: ' + err.message); }
+}
+
+function downloadExcel(p = 'exp') {
+  const crew = p === 'exp' ? $('hd-crew').value : '';          // Head Store memilih crew, crew otomatis miliknya sendiri
+  const s = Number($(p + '-start').value) || 1, e = Number($(p + '-end').value) || 31;
+  const c = PV[p === 'exp' ? 'pv' : 'pc'].cache;
+  if (c && c.key === pvKey(crew, s, e)) return tulisExcel(c.res);   // sama persis dengan yang tampil di pratinjau
+  toast('Menyiapkan file Excel...');
+  google.script.run.withSuccessHandler(res => {
+    if (!res) return toast('Gagal mengambil data, coba lagi');
+    if (res.status !== 'success') return toast(res.message);
+    tulisExcel(res);
+  }).withFailureHandler(err => toast('Gagal export: ' + err.message))
+    .getDataExport(currentUser.username, s, e, crew);
+}
+
+function logout() {
+  try { localStorage.removeItem('petshop_user'); } catch (e) {}
+  location.reload();
+}
+</script>
+</body>
+</html>
