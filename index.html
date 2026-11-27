@@ -17,6 +17,7 @@
 <meta property="og:url" content="https://ibay022.github.io/Deret/">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{--o:#2563eb;--o2:#1d4ed8;--tint:#eff6ff;--line:#e2e8f0;--ink:#0f172a;--mut:#64748b;--navy:#0b2540}
@@ -94,6 +95,8 @@ tbody tr:last-child td{border-bottom:0}
 .dd-i{transition:background .12s}
 #modal-edit:not(.hidden){animation:fadeIn .2s}
 #modal-edit:not(.hidden)>.card{animation:pop .25s cubic-bezier(.22,1,.36,1)}
+#modal-scan:not(.hidden){animation:fadeIn .2s}
+#modal-scan:not(.hidden)>.card{animation:pop .25s cubic-bezier(.22,1,.36,1)}
 @keyframes fadeIn{from{opacity:0}}
 @keyframes pop{from{opacity:0;transform:scale(.96) translateY(6px)}}
 #toast:not(.hidden){animation:toastIn .25s cubic-bezier(.22,1,.36,1)}
@@ -351,7 +354,15 @@ header.sticky{background:rgba(255,255,255,.82);backdrop-filter:saturate(180%) bl
           <input type="hidden" id="dr-barcode">
         </div>
         <div class="card">
-          <div class="flex justify-between items-center mb-3 gap-3"><h3 id="dr-info" class="font-bold text-base">Daftar barang</h3><button onclick="simpanDeret()" class="btn btn-o">Simpan</button></div>
+          <div class="flex justify-between items-center mb-3 gap-3">
+            <h3 id="dr-info" class="font-bold text-base">Daftar barang</h3>
+            <div class="flex items-center gap-2">
+              <button onclick="bukaScanner()" class="btn btn-soft" style="padding:.75rem .85rem" title="Scan barcode" aria-label="Scan barcode">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7V5a1 1 0 011-1h2M17 4h2a1 1 0 011 1v2M20 17v2a1 1 0 01-1 1h-2M7 20H5a1 1 0 01-1-1v-2M8 8v8M12 8v8M16 8v8"/></svg>
+              </button>
+              <button onclick="simpanDeret()" class="btn btn-o">Simpan</button>
+            </div>
+          </div>
           <input type="text" id="dr-filter" placeholder="🔍 Cari di daftar barang (nama / barcode)" class="inp mb-2" autocomplete="off" oninput="ambilInputDeret();renderDeret()" onkeydown="keyFilterDeret(event)">
           <p id="dr-note" class="text-xs mb-2" style="color:var(--mut)"></p>
           <div class="scroll-box" style="max-height:32rem">
@@ -486,6 +497,19 @@ header.sticky{background:rgba(255,255,255,.82);backdrop-filter:saturate(180%) bl
       <button onclick="tutupModalEdit()" class="btn btn-soft flex-1">Batal</button>
       <button onclick="simpanEditBarang()" class="btn btn-o flex-1">Simpan perubahan</button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL SCAN BARCODE -->
+<div id="modal-scan" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4" style="background:rgba(15,23,42,.6)">
+  <div class="card w-full max-w-md" style="padding:1.25rem">
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="text-lg font-extrabold">Scan barcode</h3>
+      <button onclick="tutupScanner()" style="color:var(--mut)">✕</button>
+    </div>
+    <div id="scan-reader" style="width:100%;border-radius:12px;overflow:hidden;background:#0f172a;min-height:200px"></div>
+    <p id="scan-status" class="text-xs text-center mt-3" style="color:var(--mut)">Membuka kamera...</p>
+    <button onclick="tutupScanner()" class="btn btn-soft w-full mt-3">Batal</button>
   </div>
 </div>
 
@@ -714,6 +738,57 @@ function enterFilterDeret() {
   const rows = drRows(); if (drAktif >= 0 && rows[drAktif]) return fokusHitung(Number(rows[drAktif].dataset.n));
   if (cocok.length === 1) return fokusHitung(cocok[0].n);
   toast(cocok.length ? 'Pilih barang dari daftar yang tampil' : 'Barang tidak ada di daftar deret');
+}
+
+// ============ SCAN BARCODE (kamera HP) ============
+let scanner = null, scanSudah = false;
+const tanpaNol = s => String(s).trim().replace(/^0+/, '');
+
+function bukaScanner() {
+  if (typeof Html5Qrcode === 'undefined') return toast('Library scanner gagal dimuat, cek koneksi internet');
+  if (scanner) return;
+  scanSudah = false;
+  $('modal-scan').classList.remove('hidden');
+  $('scan-status').innerText = 'Membuka kamera...';
+  const F = Html5QrcodeSupportedFormats;
+  scanner = new Html5Qrcode('scan-reader', {
+    formatsToSupport: [F.EAN_13, F.EAN_8, F.UPC_A, F.UPC_E, F.CODE_128, F.CODE_39, F.ITF, F.QR_CODE],
+    useBarCodeDetectorIfSupported: true,
+    verbose: false
+  });
+  scanner.start(
+    { facingMode: 'environment' },
+    { fps: 10, qrbox: (w, h) => ({ width: Math.min(w - 20, 320), height: 130 }) },
+    hasilScan,
+    () => {}
+  ).then(() => { $('scan-status').innerText = 'Arahkan kamera ke barcode barang'; })
+   .catch(() => {
+     $('scan-status').innerText = 'Kamera tidak bisa dibuka. Izinkan akses kamera di browser, lalu coba lagi.';
+     const s = scanner; scanner = null; try { s.clear(); } catch (e) {}
+   });
+}
+
+function tutupScanner() {
+  $('modal-scan').classList.add('hidden');
+  const s = scanner; scanner = null;
+  if (!s) return Promise.resolve();
+  return s.stop().catch(() => {}).then(() => { try { s.clear(); } catch (e) {} });
+}
+
+function hasilScan(teks) {
+  if (scanSudah) return;                       // cegah hasil ganda saat kamera masih membaca
+  scanSudah = true;
+  if (navigator.vibrate) navigator.vibrate(80);
+  const kode = String(teks).trim();
+  tutupScanner().then(() => {
+    // cocokkan persis dulu, lalu abaikan nol di depan (UPC-A vs EAN-13)
+    const ada = deretItems.find(i => String(i.barcode).trim() === kode)
+             || deretItems.find(i => tanpaNol(i.barcode) === tanpaNol(kode));
+    $('dr-filter').value = ada ? ada.barcode : kode;
+    ambilInputDeret();
+    renderDeret();
+    setTimeout(enterFilterDeret, 80);          // barang ketemu: kursor langsung ke kolom Hitung
+  });
 }
 
 function enterHitung(e) { if (e.key === 'Enter') { e.preventDefault(); simpanDeret(); } }
