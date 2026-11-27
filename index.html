@@ -95,6 +95,8 @@ tbody tr:last-child td{border-bottom:0}
 .dd-i{transition:background .12s}
 #modal-edit:not(.hidden){animation:fadeIn .2s}
 #modal-edit:not(.hidden)>.card{animation:pop .25s cubic-bezier(.22,1,.36,1)}
+#modal-produk:not(.hidden){animation:fadeIn .2s}
+#modal-produk:not(.hidden)>.card{animation:pop .25s cubic-bezier(.22,1,.36,1)}
 #modal-scan:not(.hidden){animation:fadeIn .2s}
 #modal-scan:not(.hidden)>.card{animation:pop .25s cubic-bezier(.22,1,.36,1)}
 @keyframes fadeIn{from{opacity:0}}
@@ -515,6 +517,33 @@ header.sticky{background:rgba(255,255,255,.82);backdrop-filter:saturate(180%) bl
   </div>
 </div>
 
+<!-- MODAL DETAIL PRODUK (hasil scan di menu Cek harga & stok) -->
+<div id="modal-produk" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4" style="background:rgba(15,23,42,.6)" onclick="if(event.target===this)tutupProduk()">
+  <div class="card w-full max-w-sm" style="padding:1.5rem">
+    <div class="flex justify-between items-start mb-3">
+      <span id="pd-kategori" class="badge">-</span>
+      <button onclick="tutupProduk()" style="color:var(--mut)">✕</button>
+    </div>
+    <h3 id="pd-nama" class="text-lg font-extrabold leading-snug"></h3>
+    <p id="pd-barcode" class="font-mono text-xs mt-1" style="color:var(--mut)"></p>
+    <div class="grid grid-cols-2 gap-3 mt-5">
+      <div class="rounded-xl p-3" style="background:var(--tint)">
+        <p class="text-xs font-semibold" style="color:var(--mut)">Harga jual</p>
+        <p id="pd-harga" class="text-xl font-extrabold mt-1" style="color:var(--o2)"></p>
+      </div>
+      <div id="pd-stok-box" class="rounded-xl p-3">
+        <p class="text-xs font-semibold" style="color:var(--mut)">Stok</p>
+        <p id="pd-stok" class="text-xl font-extrabold mt-1"></p>
+        <p id="pd-stok-ket" class="text-xs font-semibold mt-0.5"></p>
+      </div>
+    </div>
+    <div class="flex gap-2 mt-5">
+      <button onclick="tutupProduk()" class="btn btn-soft flex-1">Tutup</button>
+      <button onclick="tutupProduk();bukaScanner('master')" class="btn btn-o flex-1">Scan lagi</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL SCAN BARCODE -->
 <div id="modal-scan" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4" style="background:rgba(15,23,42,.6)">
   <div class="card w-full max-w-md" style="padding:1.25rem">
@@ -808,9 +837,10 @@ function hasilScan(teks) {
       return;
     }
     const p = cocok(allMasterItems);
-    if (mode === 'master') {                   // cari di master barang
+    if (mode === 'master') {                   // cek harga & stok: tampilkan popup detail produk
       $('filter-search').value = p ? p.barcode : kode;
       resetPageAndRenderMaster();
+      if (p) tampilProduk(p); else toast('Barcode ' + kode + ' tidak ditemukan di database');
       return;
     }
     // mode 'dr' (tambah barang deret) dan 'repack': pilih produk dari database
@@ -820,6 +850,22 @@ function hasilScan(teks) {
     cariProduk(kode, mode);
   });
 }
+
+function tampilProduk(p) {
+  const stok = Number(p.stok) || 0, min = Number(p.stokMin) || 0;
+  const habis = stok <= 0, rendah = !habis && min > 0 && stok <= min;
+  $('pd-nama').innerText = p.nama;
+  $('pd-barcode').innerText = p.barcode;
+  $('pd-kategori').innerText = p.kategori || 'Tanpa kategori';
+  $('pd-harga').innerText = rp(p.harga);
+  $('pd-stok').innerText = stok;
+  $('pd-stok').style.color = (habis || rendah) ? '#c62828' : 'var(--ink)';
+  $('pd-stok-box').style.background = (habis || rendah) ? '#fff1f0' : '#f0fdf4';
+  $('pd-stok-ket').innerText = habis ? 'Stok habis' : rendah ? 'Di bawah minimal' : 'Tersedia';
+  $('pd-stok-ket').style.color = (habis || rendah) ? '#c62828' : '#15803d';
+  $('modal-produk').classList.remove('hidden');
+}
+function tutupProduk() { $('modal-produk').classList.add('hidden'); }
 
 function enterHitung(e) { if (e.key === 'Enter') { e.preventDefault(); simpanDeret(); } }
 
