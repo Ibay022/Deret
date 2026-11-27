@@ -349,6 +349,9 @@ header.sticky{background:rgba(255,255,255,.82);backdrop-filter:saturate(180%) bl
               <input type="text" id="dr-cari" autocomplete="off" placeholder="Nama produk atau scan barcode" class="inp" oninput="cariProduk(this.value,'dr')" onfocus="cariProduk(this.value,'dr')" onkeydown="ddKey(event,'dr')">
               <div id="dr-dropdown" class="dd hidden"></div>
             </div>
+            <button onclick="bukaScanner('dr')" class="btn btn-soft" style="padding:.75rem .85rem" title="Scan barcode" aria-label="Scan barcode">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7V5a1 1 0 011-1h2M17 4h2a1 1 0 011 1v2M20 17v2a1 1 0 01-1 1h-2M7 20H5a1 1 0 01-1-1v-2M8 8v8M12 8v8M16 8v8"/></svg>
+            </button>
             <button onclick="tambahDeretTerpilih()" class="btn btn-o" style="white-space:nowrap">+ Tambah</button>
           </div>
           <input type="hidden" id="dr-barcode">
@@ -357,7 +360,7 @@ header.sticky{background:rgba(255,255,255,.82);backdrop-filter:saturate(180%) bl
           <div class="flex justify-between items-center mb-3 gap-3">
             <h3 id="dr-info" class="font-bold text-base">Daftar barang</h3>
             <div class="flex items-center gap-2">
-              <button onclick="bukaScanner()" class="btn btn-soft" style="padding:.75rem .85rem" title="Scan barcode" aria-label="Scan barcode">
+              <button onclick="bukaScanner('filter')" class="btn btn-soft" style="padding:.75rem .85rem" title="Scan barcode" aria-label="Scan barcode">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7V5a1 1 0 011-1h2M17 4h2a1 1 0 011 1v2M20 17v2a1 1 0 01-1 1h-2M7 20H5a1 1 0 01-1-1v-2M8 8v8M12 8v8M16 8v8"/></svg>
               </button>
               <button onclick="simpanDeret()" class="btn btn-o">Simpan</button>
@@ -376,10 +379,17 @@ header.sticky{background:rgba(255,255,255,.82);backdrop-filter:saturate(180%) bl
         <div class="card max-w-xl mx-auto" style="padding:2rem">
           <div class="text-center mb-6"><div class="w-12 h-12 mx-auto mb-2 rounded-xl flex items-center justify-center text-xl" style="background:var(--tint)">📦</div><h2 class="text-xl font-extrabold">Repack / pecah kemasan</h2><p class="text-sm mt-1" style="color:var(--mut)">Cari produk untuk menambah stok eceran</p></div>
           <div class="space-y-4">
-            <div class="relative">
+            <div>
               <label class="lbl">Cari produk</label>
-              <input type="text" id="repack-cari" autocomplete="off" placeholder="Nama produk atau barcode" class="inp" oninput="cariProduk(this.value,'repack')" onfocus="cariProduk(this.value,'repack')" onkeydown="ddKey(event,'repack')">
-              <div id="repack-dropdown" class="dd hidden"></div>
+              <div class="flex gap-2">
+                <div class="relative flex-1">
+                  <input type="text" id="repack-cari" autocomplete="off" placeholder="Nama produk atau barcode" class="inp" oninput="cariProduk(this.value,'repack')" onfocus="cariProduk(this.value,'repack')" onkeydown="ddKey(event,'repack')">
+                  <div id="repack-dropdown" class="dd hidden"></div>
+                </div>
+                <button onclick="bukaScanner('repack')" class="btn btn-soft" style="padding:.75rem .85rem" title="Scan barcode" aria-label="Scan barcode">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7V5a1 1 0 011-1h2M17 4h2a1 1 0 011 1v2M20 17v2a1 1 0 01-1 1h-2M7 20H5a1 1 0 01-1-1v-2M8 8v8M12 8v8M16 8v8"/></svg>
+                </button>
+              </div>
             </div>
             <div><label class="lbl">Barcode terpilih</label><input type="text" id="repack-barcode" readonly placeholder="Otomatis" class="inp font-mono"></div>
             <div><label class="lbl">Jumlah penambahan eceran</label><input type="number" id="repack-jumlah" placeholder="Contoh: 15" class="inp"></div>
@@ -409,7 +419,12 @@ header.sticky{background:rgba(255,255,255,.82);backdrop-filter:saturate(180%) bl
           <div class="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-5">
             <div><h2 class="text-lg font-extrabold">Daftar master barang</h2><p id="master-info-count" class="text-xs mt-0.5" style="color:var(--mut)">Menampilkan 0 produk</p></div>
             <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-              <input type="text" id="filter-search" oninput="renderMasterDebounced()" placeholder="🔍 Cari nama / barcode" class="inp sm:w-60">
+              <div class="flex gap-2 sm:w-72">
+                <input type="text" id="filter-search" oninput="renderMasterDebounced()" placeholder="🔍 Cari nama / barcode" class="inp flex-1 min-w-0">
+                <button onclick="bukaScanner('master')" class="btn btn-soft" style="padding:.75rem .85rem" title="Scan barcode" aria-label="Scan barcode">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7V5a1 1 0 011-1h2M17 4h2a1 1 0 011 1v2M20 17v2a1 1 0 01-1 1h-2M7 20H5a1 1 0 01-1-1v-2M8 8v8M12 8v8M16 8v8"/></svg>
+                </button>
+              </div>
               <select id="filter-kategori" onchange="resetPageAndRenderMaster()" class="inp sm:w-44"><option value="">Semua kategori</option></select>
             </div>
           </div>
@@ -741,12 +756,13 @@ function enterFilterDeret() {
 }
 
 // ============ SCAN BARCODE (kamera HP) ============
-let scanner = null, scanSudah = false;
+let scanner = null, scanSudah = false, scanTarget = 'filter';   // target: filter | dr | repack | master
 const tanpaNol = s => String(s).trim().replace(/^0+/, '');
 
-function bukaScanner() {
+function bukaScanner(target = 'filter') {
   if (typeof Html5Qrcode === 'undefined') return toast('Library scanner gagal dimuat, cek koneksi internet');
   if (scanner) return;
+  scanTarget = target;
   scanSudah = false;
   $('modal-scan').classList.remove('hidden');
   $('scan-status').innerText = 'Membuka kamera...';
@@ -779,15 +795,29 @@ function hasilScan(teks) {
   if (scanSudah) return;                       // cegah hasil ganda saat kamera masih membaca
   scanSudah = true;
   if (navigator.vibrate) navigator.vibrate(80);
-  const kode = String(teks).trim();
+  const kode = String(teks).trim(), mode = scanTarget;
+  // cocokkan persis dulu, lalu abaikan nol di depan (UPC-A vs EAN-13)
+  const cocok = list => list.find(i => String(i.barcode).trim() === kode) || list.find(i => tanpaNol(i.barcode) === tanpaNol(kode));
   tutupScanner().then(() => {
-    // cocokkan persis dulu, lalu abaikan nol di depan (UPC-A vs EAN-13)
-    const ada = deretItems.find(i => String(i.barcode).trim() === kode)
-             || deretItems.find(i => tanpaNol(i.barcode) === tanpaNol(kode));
-    $('dr-filter').value = ada ? ada.barcode : kode;
-    ambilInputDeret();
-    renderDeret();
-    setTimeout(enterFilterDeret, 80);          // barang ketemu: kursor langsung ke kolom Hitung
+    if (mode === 'filter') {                   // cari di daftar deret
+      const ada = cocok(deretItems);
+      $('dr-filter').value = ada ? ada.barcode : kode;
+      ambilInputDeret();
+      renderDeret();
+      setTimeout(enterFilterDeret, 80);        // barang ketemu: kursor langsung ke kolom Hitung
+      return;
+    }
+    const p = cocok(allMasterItems);
+    if (mode === 'master') {                   // cari di master barang
+      $('filter-search').value = p ? p.barcode : kode;
+      resetPageAndRenderMaster();
+      return;
+    }
+    // mode 'dr' (tambah barang deret) dan 'repack': pilih produk dari database
+    if (p) return pilihProduk(p.barcode, p.nama, mode);
+    toast('Barcode ' + kode + ' tidak ditemukan di database');
+    $(mode + '-cari').value = kode;
+    cariProduk(kode, mode);
   });
 }
 
